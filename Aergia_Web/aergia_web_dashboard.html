@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aergia OS v2.0 - AGI Intelligence Hub</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #e5e7eb;
+            overflow-x: hidden;
+        }
+
+        /* Animated Mesh Background */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(15, 118, 110, 0.15), transparent 25%);
+            z-index: -1;
+            animation: pulse-bg 15s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-bg {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-panel-hover:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .terminal-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2); 
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+        
+        .glow-accent {
+            box-shadow: 0 0 15px currentColor;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mesh-bg"></div>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:5000';
+
+        function App() {
+            const [currentPage, setCurrentPage] = useState('command-center');
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+            const [pantheonStatus, setPantheonStatus] = useState({});
+            const [missionInput, setMissionInput] = useState('');
+            const [executionLog, setExecutionLog] = useState([]);
+            const [isExecuting, setIsExecuting] = useState(false);
+            const [apiOnline, setApiOnline] = useState(false);
+
+            // Navigation structure
+            const navigation = [
+                { id: 'command-center', name: 'Neural Link', icon: '🧠', color: 'text-purple-400' },
+                { id: 'ares', name: 'Project Ares', icon: '🛡️', color: 'text-red-400' },
+                { id: 'midas', name: 'Project Midas', icon: '💰', color: 'text-yellow-400' },
+                { id: 'chimera', name: 'Project Chimera', icon: '🎬', color: 'text-pink-400' },
+                { id: 'divider', type: 'divider' },
+                { id: 'fable', name: 'The Archive', icon: '📖', color: 'text-gray-400' },
+                { id: 'resume', name: 'Identity', icon: '📄', color: 'text-gray-400' },
+            ];
+
+            // THE COMPLETE PANTHEON (Now including Ares)
+            const pantheon = {
+                active: [
+                    { name: 'Ares', role: 'Cyber Defense', provider: 'Protocol SIFT / Nemo', icon: '🛡️', status: 'online', glow: 'text-red-400', border: 'border-red-500/30' },
+                    { name: 'Midas', role: 'Trading Engine', provider: 'Financial Intelligence', icon: '💰', status: 'online', glow: 'text-yellow-400', border: 'border-yellow-500/30' },
+                    { name: 'Chimera', role: 'Video Engine', provider: 'FAL.ai', icon: '🎬', status: 'online', glow: 'text-pink-400', border: 'border-pink-500/30' },
+                    { name: 'Hyperion', role: 'AI Director', provider: 'Mission Control', icon: '☀️', status: 'online', glow: 'text-orange-400', border: 'border-orange-500/30' },
+                ],
+                intelligence: [
+                    { name: 'Athena', role: 'Intelligence', provider: 'ChatLLM (OpenRouter)', icon: '🦉', status: 'online', glow: 'text-cyan-400', border: 'border-cyan-500/30' },
+                    { name: 'Prometheus', role: 'Deep Reasoning', provider: 'Google Gemini', icon: '🔥', status: 'online', glow: 'text-orange-500', border: 'border-orange-600/30' },
+                    { name: 'Hephaestus', role: 'Code Forge', provider: 'Antigravity', icon: '⚒️', status: 'online', glow: 'text-slate-300', border: 'border-slate-500/30' },
+                ],
+                planned: [
+                    { name: 'Aura', role: 'Edge AI', provider: 'Jetson (Local)', icon: '🌀', status: 'planned', glow: 'text-blue-500', border: 'border-gray-700' },
+                    { name: 'Hestia', role: 'Home & Health', provider: 'The Hearth', icon: '🏠', status: 'planned', glow: 'text-red-500', border: 'border-gray-700' },
+                    { name: 'Hermes', role: 'Messenger', provider: 'Comms Hub', icon: '📨', status: 'planned', glow: 'text-purple-500', border: 'border-gray-700' },
+                ],
+                future: [
+                    { name: 'Kairos', role: 'Scheduling', provider: 'Time Management', icon: '⏰', status: 'future', glow: 'text-gray-500', border: 'border-gray-800' },
+                    { name: 'Morai', role: 'Predictive AI', provider: 'Forecasting', icon: '🔮', status: 'future', glow: 'text-gray-500', border: 'border-gray-800' },
+                    { name: 'Plutus', role: 'Legacy Archive', provider: 'Data Vault', icon: '📦', status: 'future', glow: 'text-gray-500', border: 'border-gray-800' },
+                ]
+            };
+
+            // Fetch API status
+            useEffect(() => {
+                const checkAPI = async () => {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/status`);
+                        if (response.ok) {
+                            setApiOnline(true);
+                        } else {
+                            setApiOnline(false);
+                        }
+                    } catch (error) {
+                        setApiOnline(false);
+                    }
+                };
+                checkAPI();
+                const interval = setInterval(checkAPI, 5000);
+                return () => clearInterval(interval);
+            }, []);
+
+            // Execute mission via API
+            const executeMission = async () => {
+                if (!missionInput.trim()) return;
+
+                setIsExecuting(true);
+                addLog(`> Transmitting intent to Intelligence Router: "${missionInput}"`);
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/orchestrate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ mission: missionInput })
+                    });
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        addLog(`[SUCCESS] ${result.content || result.message}`);
+                    } else {
+                        addLog(`[ERROR] ${result.error || 'Unknown deviation detected'}`);
+                    }
+                } catch (error) {
+                    addLog(`[SYSTEM FAILURE] ${error.message}`);
+                } finally {
+                    setIsExecuting(false);
+                    setMissionInput('');
+                }
+            };
+
+            const addLog = (message) => {
+                const timestamp = new Date().toISOString().split('T')[1].slice(0, 12);
+                setExecutionLog(prev => [...prev, { time: timestamp, message }]);
+            };
+
+            const clearLog = () => {
+                setExecutionLog([]);
+                addLog('Neural link reset. Awaiting input.');
+            };
+
+            // Neural Link / Command Center Page
+            const CommandCenterPage = () => (
+                <div className="space-y-8 animate-fade-in">
+                    {/* Hero Section */}
+                    <div className="glass-panel rounded-2xl p-8 flex justify-between items-start">
+                        <div>
+                            <div className="text-4xl font-extrabold mb-2 tracking-tight text-white glow-text">
+                                AERGIA OS <span className="text-purple-500">v2.0</span>
+                            </div>
+                            <div className="text-xl text-gray-400 font-light">Agentic Intelligence Hub</div>
+                        </div>
+                        <div className="text-right flex flex-col items-end">
+                            <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">Core Status</div>
+                            <div className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wider flex items-center gap-2 border ${apiOnline ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'}`}>
+                                <span className={`w-2 h-2 rounded-full ${apiOnline ? 'bg-green-400 animate-pulse glow-accent' : 'bg-red-400'}`}></span>
+                                {apiOnline ? 'SYNCHRONIZED' : 'DISCONNECTED'}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* LIVE MISSION CONTROL */}
+                    <div className="glass-panel rounded-2xl p-8 border-l-4 border-l-purple-500">
+                        <h2 className="text-xl font-bold mb-6 text-white tracking-wide uppercase flex items-center gap-3">
+                            <span className="text-purple-500">⚡</span> Neural Uplink
+                        </h2>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-1 space-y-4">
+                                <textarea
+                                    className="w-full bg-black/40 rounded-xl p-4 text-white border border-white/10 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 focus:outline-none transition-all resize-none terminal-font text-sm"
+                                    rows="5"
+                                    value={missionInput}
+                                    onChange={(e) => setMissionInput(e.target.value)}
+                                    placeholder="Enter directive..."
+                                    disabled={isExecuting}
+                                />
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={executeMission}
+                                        disabled={isExecuting || !apiOnline}
+                                        className={`flex-1 py-3 rounded-xl font-bold text-sm tracking-widest uppercase transition-all ${isExecuting || !apiOnline
+                                                ? 'bg-white/5 text-gray-500 border border-white/5 cursor-not-allowed'
+                                                : 'bg-purple-600/20 text-purple-300 border border-purple-500/50 hover:bg-purple-500/30 glow-accent'
+                                            }`}
+                                    >
+                                        {isExecuting ? 'Processing' : 'Execute'}
+                                    </button>
+                                    <button
+                                        onClick={clearLog}
+                                        className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 transition-all"
+                                        title="Clear Terminal"
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Execution Terminal */}
+                            <div className="lg:col-span-2 bg-black/60 rounded-xl p-5 border border-white/5 terminal-font text-xs flex flex-col">
+                                <div className="flex items-center gap-2 mb-4 text-gray-500 border-b border-white/5 pb-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
+                                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
+                                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
+                                    <span className="ml-2 uppercase tracking-widest text-[10px]">OS.Terminal.Out</span>
+                                </div>
+                                <div className="flex-1 overflow-y-auto space-y-2 h-48">
+                                    {executionLog.length === 0 ? (
+                                        <div className="text-gray-600">_ awaiting neural input...</div>
+                                    ) : (
+                                        executionLog.map((log, idx) => (
+                                            <div key={idx} className="leading-relaxed">
+                                                <span className="text-purple-400/50">[{log.time}]</span>{' '}
+                                                <span className={log.message.includes('[ERROR]') ? 'text-red-400' : log.message.includes('[SUCCESS]') ? 'text-green-400' : 'text-gray-300'}>
+                                                    {log.message}
+                                                </span>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* THE PANTHEON GRID */}
+                    <div className="space-y-6">
+                        <h2 className="text-xl font-bold text-white tracking-wide uppercase flex items-center gap-3">
+                            <span className="text-blue-500">🌐</span> Active Subsystems
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {pantheon.active.map((god) => (
+                                <div key={god.name} className={`glass-panel glass-panel-hover rounded-xl p-5 border-t-2 ${god.border}`}>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="text-3xl">{god.icon}</div>
+                                        <div className={`text-[10px] uppercase tracking-widest font-bold ${god.glow} bg-white/5 px-2 py-1 rounded`}>
+                                            Online
+                                        </div>
+                                    </div>
+                                    <div className={`text-lg font-bold mb-1 text-white`}>{god.name}</div>
+                                    <div className="text-xs text-gray-400 mb-1">{god.role}</div>
+                                    <div className="text-[10px] text-gray-500 terminal-font">{god.provider}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <h2 className="text-xl font-bold text-white tracking-wide uppercase flex items-center gap-3 mt-10">
+                            <span className="text-cyan-500">🧠</span> Cognitive Layer
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {pantheon.intelligence.map((god) => (
+                                <div key={god.name} className={`glass-panel glass-panel-hover rounded-xl p-5 border-l-2 ${god.border}`}>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="text-3xl">{god.icon}</div>
+                                        <div className={`text-[10px] uppercase tracking-widest font-bold ${god.glow}`}>Active</div>
+                                    </div>
+                                    <div className="text-lg font-bold text-white mb-1">{god.name}</div>
+                                    <div className="text-xs text-gray-400 terminal-font">{god.provider}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Generic Page Renderer
+            const PageContent = ({ title, icon }) => (
+                <div className="glass-panel rounded-2xl p-12 text-center border-t-2 border-white/20">
+                    <div className="text-6xl mb-6">{icon}</div>
+                    <h1 className="text-3xl font-bold text-white mb-4">{title}</h1>
+                    <p className="text-gray-400">Module synchronized. Awaiting specific directive.</p>
+                </div>
+            );
+
+            const renderPage = () => {
+                switch (currentPage) {
+                    case 'command-center': return <CommandCenterPage />;
+                    case 'ares': return <PageContent title="Project Ares: Cyber Defense" icon="🛡️" />;
+                    case 'midas': return <PageContent title="Project Midas: Trading Engine" icon="💰" />;
+                    case 'chimera': return <PageContent title="Project Chimera: Video Engine" icon="🎬" />;
+                    default: return <CommandCenterPage />;
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex">
+                    {/* Sidebar */}
+                    <div className={`${sidebarOpen ? 'w-64' : 'w-20'} glass-panel border-r border-white/10 transition-all duration-300 flex flex-col z-50`}>
+                        <div className="p-6 border-b border-white/5 flex items-center gap-3">
+                            <div className="text-3xl">✨</div>
+                            {sidebarOpen && (
+                                <div>
+                                    <div className="text-sm font-bold tracking-widest text-white">AERGIA</div>
+                                    <div className="text-[10px] text-gray-500 uppercase">Core OS</div>
+                                </div>
+                            )}
+                        </div>
+
+                        <nav className="flex-1 p-4 space-y-1">
+                            {navigation.map((item) => {
+                                if (item.type === 'divider') return <div key={item.id} className="my-4 border-t border-white/5"></div>;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setCurrentPage(item.id)}
+                                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${currentPage === item.id
+                                                ? 'bg-white/10 border border-white/10 text-white shadow-lg'
+                                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                            }`}
+                                    >
+                                        <span className={`text-xl ${currentPage === item.id ? item.color : ''}`}>{item.icon}</span>
+                                        {sidebarOpen && <span className="text-sm font-medium">{item.name}</span>}
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                        
+                        <div className="p-4 border-t border-white/5">
+                            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="w-full py-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 transition-all text-xs uppercase tracking-widest">
+                                {sidebarOpen ? 'Collapse' : '▶'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="flex-1 flex flex-col overflow-y-auto h-screen relative">
+                        <div className="glass-panel sticky top-0 z-40 px-8 py-4 flex justify-between items-center border-b border-white/5">
+                            <div className="text-sm font-medium text-gray-300 tracking-wide">
+                                {navigation.find(n => n.id === currentPage)?.name || 'Neural Link'}
+                            </div>
+                            <div className="text-xs text-gray-500 terminal-font">
+                                node: HAMPTON_VA // user: D.AUSTIN
+                            </div>
+                        </div>
+
+                        <div className="flex-1 p-8 max-w-7xl mx-auto w-full">
+                            {renderPage()}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+
+</html>

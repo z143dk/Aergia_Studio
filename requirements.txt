@@ -1,0 +1,6 @@
+﻿# Aergia Studio - Master Requirements
+# Install all: pip install -r requirements.txt
+-r requirements/base.txt
+-r requirements/ai.txt
+-r requirements/finance.txt
+-r requirements/health.txt

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aergia - The Pantheon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='Aergia_Icon.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <!-- PWA / iOS Support -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Aergia">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='Aergia_Icon.png') }}">
+</head>
+
+<body>
+    <!-- Entrance Button Overlay to bypass Autoplay Policies -->
+    <div id="entrance-overlay"
+        style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+        <img src="{{ url_for('static', filename='Aergia_Icon.png') }}"
+            style="width: 150px; margin-bottom: 30px; animation: pulse 2s infinite;">
+        <button id="awaken-btn" onclick="awakenAergia()"
+            style="padding: 15px 40px; font-size: 24px; background: rgba(52, 152, 219, 0.2); border: 2px solid #3498db; color: #3498db; border-radius: 50px; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);">👁️
+            Awaken Aergia</button>
+        <p style="color: #666; font-family: 'Consolas', monospace; margin-top: 20px;">[System Standby - Awaiting User
+            Initialization]</p>
+    </div>
+
+    <!-- Marvel-Style Intro Overlay -->
+    <div id="intro-overlay" style="display: none;">
+        <div id="intro-sequence"></div>
+        <img id="intro-logo" src="{{ url_for('static', filename='Aergia_Icon.png') }}" alt="Aergia">
+        <button id="skip-btn" onclick="skipIntro()">Skip Intro ⏩</button>
+    </div>
+
+    <!-- Background Layer -->
+    <div id="background-layer"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Media Player -->
+        <div id="media-player">
+            <div id="player-controls">
+                <button id="play-pause-btn" onclick="togglePlay()">⏸️</button>
+                <div class="vol-wrapper">
+                    <span id="vol-icon">🔊</span>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5">
+                </div>
+                <button id="lyrics-btn" onclick="toggleLyrics()">📜 Lyrics</button>
+            </div>
+
+            <div id="lyrics-panel" style="display: none;">
+                <h3>🎶 Phoenix</h3>
+                <div class="lyrics-scroll">
+                    <p>What are you willing to lose?</p>
+                    <p>You cover your wounds, but underneath them</p>
+                    <p>A million voices in your head that whisper, "Stop, now"</p>
+                    <p>Another twist of the knife, turn of the screws</p>
+                    <p>It's all in your mind and it's fighting you</p>
+                    <p>Arm yourself, a storm is coming</p>
+                    <p>Well, kid, what you gonna do now?</p>
+                    <br>
+                    <p>It's your reflection looking back to pull you down</p>
+                    <p>So are you gonna die today or make it out alive?</p>
+                    <p>You gotta conquer the monster in your head and then you'll fly</p>
+                    <p>Fly, phoenix, fly</p>
+                    <p>It's time for a new empire</p>
+                    <p>Go bury your demons then tear down the ceiling</p>
+                    <p>Phoenix, fly</p>
+                    <br>
+                    <p>And now you're playing with matches</p>
+                    <p>Come out of the ashes underneath you</p>
+                    <p>A million voices in the crowd they're screaming, "Stop, now"</p>
+                    <p>We'll let 'em swallow their pride, you're turning the tide to true believers</p>
+                    <p>Got them in the palm of your hand, you're playing God now</p>
+                    <br>
+                    <p>What you gonna do now?</p>
+                    <p>It's your reflection looking back to pull you down</p>
+                    <p>So are you gonna die today or make it out alive?</p>
+                    <p>You gotta conquer the monster in your head and then you'll fly</p>
+                    <p>Fly, phoenix, fly</p>
+                    <p>It's time for a new empire</p>
+                    <p>Go bury your demons then tear down the ceiling</p>
+                    <p>Phoenix, fly</p>
+                    <br>
+                    <p>So are you gonna die today or make it out alive?</p>
+                    <p>You gotta conquer the monster in your head and then you'll fly</p>
+                    <p>Fly, phoenix, fly</p>
+                    <p>It's time for a new empire</p>
+                    <p>Go bury your demons then tear down the ceiling</p>
+                    <p>Phoenix, fly</p>
+                </div>
+            </div>
+        </div>
+
+        <header>
+            <h1>🧿 The Aergia Pantheon</h1>
+            <p class="subtitle">Agentic OS - Choose Your Path</p>
+            <button id="sync-btn" onclick="syncProject()"
+                style="position: absolute; top: 20px; right: 20px; background: rgba(52, 152, 219, 0.2); border: 1px solid #3498db; color: #3498db; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s;">
+                ☁️ Sync Project
+            </button>
+            <button id="rsync-btn" onclick="deepSync()"
+                style="position: absolute; top: 20px; right: 160px; background: rgba(155, 89, 182, 0.2); border: 1px solid #9b59b6; color: #9b59b6; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 10px rgba(155, 89, 182, 0.2);">
+                ⚡ Deep Sync (Delta Rate)
+            </button>
+            <div style="position: absolute; top: 60px; right: 20px; display: flex; gap: 10px;">
+                <button id="taildrop-btn" onclick="taildropSync('project')"
+                    style="background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; transition: all 0.3s; box-shadow: 0 0 10px rgba(46, 204, 113, 0.2);">
+                    📦 Push Code Bundle
+                </button>
+                <button id="secrets-btn" onclick="taildropSync('secrets')"
+                    style="background: rgba(231, 76, 60, 0.2); border: 1px solid #c0392b; color: #e74c3c; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                    🔒 Send Secrets
+                </button>
+            </div>
+
+            <!-- Network Status Icon -->
+            <div id="net-status" onclick="handleNetworkClick()" title="Checking Network..."
+                style="position: absolute; top: 65px; right: 1160px; width: 15px; height: 15px; border-radius: 50%; background: #95a5a6; cursor: pointer; border: 2px solid #34495e; box-shadow: 0 0 10px rgba(0,0,0,0.5); transition: all 0.3s; z-index: 1001;">
+            </div>
+
+            <button id="hive-btn" onclick="toggleHive()"
+                style="position: absolute; top: 20px; right: 1120px; background: rgba(241, 196, 15, 0.2); border: 1px solid #f1c40f; color: #f1c40f; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s; z-index: 1001;">
+                🐝 Open Hive
+            </button>
+        </header>
+
+        <!-- Hive Mind Terminal Overlay -->
+        <div id="hive-terminal"
+            style="display: none; position: fixed; top: 10%; left: 10%; width: 80%; height: 80%; background: rgba(0, 0, 0, 0.95); border: 2px solid #f1c40f; z-index: 2000; padding: 20px; border-radius: 10px; box-shadow: 0 0 30px rgba(241, 196, 15, 0.3);">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px;">
+                <h2 style="color: #f1c40f; margin: 0;">🐝 Hive Mind (Swarm Intelligence)</h2>
+                <button onclick="toggleHive()"
+                    style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+
+            <div id="hive-output"
+                style="height: calc(100% - 100px); overflow-y: auto; color: #ccc; font-family: 'Consolas', monospace; white-space: pre-wrap; margin-bottom: 10px; padding: 10px; background: #111; border-radius: 5px;">
+                Welcome to the Hive.
+                > Ready for commands...
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="hive-input" placeholder="Enter a complex goal for the swarm..."
+                    style="flex: 1; padding: 15px; background: #222; border: 1px solid #444; color: #fff; font-family: 'Consolas', monospace; border-radius: 5px;"
+                    onkeypress="handleHiveEnter(event)">
+                <button onclick="sendToHive()"
+                    style="padding: 0 30px; background: #f1c40f; color: #000; border: none; font-weight: bold; cursor: pointer; border-radius: 5px;">EXECUTE</button>
+            </div>
+        </div>
+
+        <!-- Cinematic Audio Layer -->
+        <!-- Logic tries to load 'aergia_theme.mp3'. If missing, it will silently fail until file is provided. -->
+        <audio id="bg-music" loop>
+            <source src="/audio/aergia_theme.mp3" type="audio/mpeg">
+        </audio>
+
+        <!-- Mission Control / Pantheon Hybrid Layout -->
+        <div class="dashboard-layout">
+            <aside class="sidebar">
+                <button class="nav-btn active" data-filter="all">
+                    <span>🌐</span> All Agents
+                </button>
+                <button class="nav-btn" data-filter="ares">
+                    <span>🛡️</span> Project Ares
+                </button>
+                <button class="nav-btn" data-filter="midas">
+                    <span>📈</span> Project Midas
+                </button>
+                <button class="nav-btn" data-filter="hermes">
+                    <span>🚀</span> Project Hermes
+                </button>
+            </aside>
+
+            <main class="main-content">
+                <div class="section-title">
+                    <span id="current-view-title">All Agents</span>
+                    <button class="refresh-btn" id="refresh-btn">⟳ Sync Status</button>
+                </div>
+                
+                <div class="pantheon-grid" id="agents-grid">
+                    {% for god_id, god in pantheon.items() %}
+                    <div class="god-card agent-card glass-panel fade-in" data-id="{{ god_id }}" data-banner="{{ god.banner }}">
+                        <div class="icon-container">
+                            <img src="/{{ god.icon }}" alt="{{ god.name }}" class="god-icon" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' fill=\'%23555\'><circle cx=\'30\' cy=\'30\' r=\'30\'/></svg>'">
+                        </div>
+                        <div class="agent-info">
+                            <h3>{{ god.name }}</h3>
+                            <p class="god-title">{{ god.title }}</p>
+                        </div>
+                        <p class="god-description agent-description">{{ god.description }}</p>
+                        
+                        <!-- Telemetry placeholder (filled by JS) -->
+                        <div class="agent-metrics" id="metrics-{{ god_id }}"></div>
+
+                        <div class="agent-actions">
+                            <button class="launch-btn" onclick="launchModule('{{ god_id }}')">Execute Protocol</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </main>
+        </div>
+
+        <div id="toast-container"></div>
+
+        <!-- Cinema Section -->
+        <div id="cinema-section">
+            <h2>🎬 Aergia Cinema</h2>
+            <div class="cinema-container">
+                <video id="cinema-video" loop muted>
+                    <source src="{{ url_for('static', filename='assets/cinema/cinema_video.mp4') }}" type="video/mp4">
+                </video>
+                <audio id="cinema-audio">
+                    <source src="{{ url_for('static', filename='assets/cinema/cinema_audio.mp3') }}" type="audio/mpeg">
+                </audio>
+
+                <div class="cinema-controls">
+                    <button id="cin-restart-btn" onclick="restartCinema()">⏮️</button>
+                    <button id="cin-play-btn" onclick="toggleCinema()">▶️ Play Movie</button>
+                    <div class="cin-vol-wrapper">
+                        <span id="cin-vol-icon">🔊</span>
+                        <input type="range" id="cin-volume-slider" min="0" max="1" step="0.01" value="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="status-bar">
+            <span id="status-text">Ready</span>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

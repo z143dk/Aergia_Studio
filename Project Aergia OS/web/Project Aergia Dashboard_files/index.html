@@ -1,0 +1,365 @@
+<!-- Save this content as index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Aergia Dashboard</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and general body styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .section-header {
+            border-bottom: 2px solid #e5e7eb; /* Subtle separator */
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .node-card {
+            min-height: 200px; /* Ensure cards have some consistent height */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 antialiased leading-normal">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header Section -->
+        <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 sm:p-8 lg:p-10 rounded-xl shadow-lg mb-8">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-center mb-2">Project Aergia Dashboard</h1>
+            <p class="text-xl sm:text-2xl text-center font-light">Your Super Multi-Generative AI for Automated Trading</p>
+        </header>
+
+        <!-- Project Overview -->
+        <section class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <h2 class="text-2xl font-bold section-header text-blue-700">Project Aergia: Vision & Strategic Shift</h2>
+            <p class="mb-4 text-gray-700">
+                Project Aergia is designed to be an autonomous AI agent focused on achieving rapid and sustainable capital growth through high-frequency, multi-asset day trading.
+                Initially, it honed its skills in constrained equity options swing trading with a small account, learning crucial lessons in capital efficiency and risk aversion.
+            </p>
+            <p class="mb-4 text-gray-700">
+                The strategic shift is to transition to a multi-asset day trading approach, fueled by a substantial capital injection of over $50,000. This move unlocks access to liquid markets,
+                a broader universe of strategies, and accelerates the agent's learning and compounding potential across equities, options, futures, forex, crypto, ETFs, and bonds/munis.
+            </p>
+            <p class="text-gray-700 font-semibold">
+                This dashboard helps visualize Project Aergia's modular architecture and guides you through the setup for its full functionality.
+            </p>
+        </section>
+
+        <!-- Money Maker Nodes Section -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold section-header text-blue-700 mb-6">Project Aergia's "Money Maker" Nodes</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Data Ingestion & Normalization Node -->
+                <div class="node-card bg-white p-6 rounded-xl shadow-md flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3 text-purple-700">1. Data Ingestion & Normalization Node</h3>
+                        <p class="text-gray-700 mb-4">
+                            The "eyes and ears" of Aergia. Connects to broker APIs and external market data providers, ensuring real-time, clean, and normalized data for all other nodes.
+                        </p>
+                    </div>
+                    <div>
+                        <button onclick="simulateNode('dataIngestion')" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">Simulate Data Feed</button>
+                        <div id="dataIngestionOutput" class="mt-3 text-sm text-gray-600 italic"></div>
+                    </div>
+                </div>
+
+                <!-- Signal Generation Node -->
+                <div class="node-card bg-white p-6 rounded-xl shadow-md flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3 text-green-700">2. Signal Generation Node</h3>
+                        <p class="text-gray-700 mb-4">
+                            The "brains" of Aergia. Analyzes normalized market data using various ML models to identify trading opportunities and generates actionable trade signals.
+                        </p>
+                    </div>
+                    <div>
+                        <button onclick="simulateNode('signalGeneration')" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">Simulate Signal</button>
+                        <div id="signalGenerationOutput" class="mt-3 text-sm text-gray-600 italic"></div>
+                    </div>
+                </div>
+
+                <!-- Strategy Execution & Order Management Node -->
+                <div class="node-card bg-white p-6 rounded-xl shadow-md flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3 text-red-700">3. Strategy Execution & Order Management Node</h3>
+                        <p class="text-gray-700 mb-4">
+                            The "hands" of Aergia. Translates trade signals into executable orders, managing their lifecycle via broker APIs for efficient execution.
+                        </p>
+                    </div>
+                    <div>
+                        <button onclick="simulateNode('strategyExecution')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">Simulate Trade</button>
+                        <div id="strategyExecutionOutput" class="mt-3 text-sm text-gray-600 italic"></div>
+                    </div>
+                </div>
+
+                <!-- Risk Management & Position Keeping Node -->
+                <div class="node-card bg-white p-6 rounded-xl shadow-md flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3 text-yellow-700">4. Risk Management & Position Keeping Node</h3>
+                        <p class="text-gray-700 mb-4">
+                            The "guardian" of Aergia. Monitors active positions, overall portfolio risk, and enforces mandatory stop-losses to protect capital.
+                        </p>
+                    </div>
+                    <div>
+                        <button onclick="simulateNode('riskManagement')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">Check Risk Status</button>
+                        <div id="riskManagementOutput" class="mt-3 text-sm text-gray-600 italic"></div>
+                    </div>
+                </div>
+
+                <!-- LLM/Sentiment Analysis Node -->
+                <div class="node-card bg-white p-6 rounded-xl shadow-md flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3 text-blue-700">5. LLM/Sentiment Analysis Node</h3>
+                        <p class="text-gray-700 mb-4">
+                            Processes unstructured text data (news, social media) for market sentiment and insights, feeding crucial data into the Signal Generation Node.
+                        </p>
+                    </div>
+                    <div>
+                        <button onclick="simulateNode('llmSentiment')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">Simulate Sentiment</button>
+                        <div id="llmSentimentOutput" class="mt-3 text-sm text-gray-600 italic"></div>
+                    </div>
+                </div>
+
+                <!-- Learning & Optimization Node -->
+                <div class="node-card bg-white p-6 rounded-xl shadow-md flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3 text-indigo-700">6. Learning & Optimization Node</h3>
+                        <p class="text-gray-700 mb-4">
+                            The "evolutionary engine." Analyzes past performance to refine existing strategies, discover new ones, and continuously improve profitability.
+                        </p>
+                    </div>
+                    <div>
+                        <button onclick="simulateNode('learningOptimization')" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">Simulate Learning</button>
+                        <div id="learningOptimizationOutput" class="mt-3 text-sm text-gray-600 italic"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Overall Status Section -->
+        <section class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <h2 class="text-2xl font-bold section-header text-blue-700">Overall Project Aergia Status (Simulated)</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-center">
+                <div class="p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <p class="text-sm text-gray-500">Current Capital:</p>
+                    <p id="currentCapital" class="text-xl font-bold text-gray-800">$50,000.00</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <p class="text-sm text-gray-500">Daily P&L:</p>
+                    <p id="dailyPnL" class="text-xl font-bold text-green-600">+$250.00</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <p class="text-sm text-gray-500">Max Drawdown (Daily):</p>
+                    <p id="maxDrawdown" class="text-xl font-bold text-red-600">-$150.00</p>
+                </div>
+            </div>
+            <div class="flex justify-center mt-6">
+                <button onclick="updateOverallStatus()" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">Update Overall Status</button>
+            </div>
+        </section>
+
+        <!-- Setup & Instructions Section -->
+        <section class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-2xl font-bold section-header text-blue-700">Making Project Aergia Functional: Your Action Plan</h2>
+            <p class="mb-4 text-gray-700">
+                The dashboard above is a visualization. To build the actual, functional Project Aergia, follow these step-by-step instructions. This requires a significant technical build-out on Google Cloud Platform and integration with your brokerage accounts.
+            </p>
+
+            <h3 class="text-xl font-semibold mb-2 text-blue-600">Stage 0: Foundation & Environment Setup (Initial 1-2 Weeks)</h3>
+            <ul class="list-disc pl-6 mb-4 text-gray-700">
+                <li>
+                    <strong>Brokerage Account Finalization:</strong>
+                    <ul class="list-disc pl-6">
+                        <li><strong>Interactive Brokers (IBKR):</strong> Open an IBKR Pro account (if new) and enable margin, options, futures, and forex trading. This will be the primary traditional asset hub.</li>
+                        <li><strong>Charles Schwab:</strong> Ensure your existing account has margin, options (Level 2/3+), and futures trading privileges enabled.</li>
+                        <li><strong>Coinbase Advanced Trade:</strong> Verify your existing account is set up for high-frequency spot crypto trading via API.</li>
+                        <li><strong>Webull:</strong> Optimize your existing account for equities and options, enable margin and futures if desired.</li>
+                        <li><strong>Funding:</strong> Initiate wire transfers to fund all accounts, aiming for <strong>over $50,000 total capital</strong>. Allocate the largest portion to IBKR.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Google Cloud Project Setup:</strong>
+                    <ul class="list-disc pl-6">
+                        <li>Create a dedicated Google Cloud Project (e.g., "project-aergia-trading").</li>
+                        <li>Install Python (3.9+ recommended), set up virtual environments, and install Docker on your local development machine.</li>
+                        <li>Install and authenticate Google Cloud SDK (gcloud CLI) on your local machine.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Initial API Key Management:</strong>
+                    <ul class="list-disc pl-6">
+                        <li>Generate API keys/credentials for IBKR, Schwab, Coinbase Advanced Trade, and Webull within their respective developer portals.</li>
+                        <li><strong>Crucially:</strong> Securely store all these sensitive API keys and credentials in <strong>Google Secret Manager</strong>. Your agent will retrieve them dynamically at runtime. Never hardcode them.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3 class="text-xl font-semibold mb-2 text-blue-600">Stage 1: ADK Fundamentals & Basic Agent Deployment (1-2 Weeks)</h3>
+            <ul class="list-disc pl-6 mb-4 text-gray-700">
+                <li><strong>ADK Crash Course Module 1 & 2.1:</strong> Follow the official ADK Crash Course for "Course Introduction and Environment Configuration" and "Building Your First Basic Agent." Understand `LlmAgent`, its parameters, and ADK's required project structure. Run a simple "greeting agent" locally to grasp the basics.</li>
+                <li><strong>Project Aergia Basic Agent:</strong> Create a very simple ADK agent. Its instruction could be to securely retrieve a test secret from Google Secret Manager to confirm your secure setup.</li>
+                <li><strong>Initial GCP Deployment:</strong> Deploy this basic Project Aergia agent to <strong>Google Cloud Run</strong> or a small <strong>Compute Engine VM</strong> (e.g., e2-medium or c2-standard-4). This establishes your continuous deployment pipeline for agent components.</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold mb-2 text-blue-600">Stage 2: Tool Integration & Broker API Connectivity (2-3 Weeks)</h3>
+            <ul class="list-disc pl-6 mb-4 text-gray-700">
+                <li><strong>ADK Crash Course Module 2.2 & 2.3:</strong> Learn about "Enhancing Agents with Tools" (built-in and custom) and "Achieving Model Agility with LiteLLM." Pay attention to tool limitations.</li>
+                <li>
+                    <strong>Broker API Connector Tool:</strong> Develop custom Python functions that act as "tools" to encapsulate API calls to IBKR, Schwab, Coinbase, and Webull. These tools will handle:
+                    <ul class="list-disc pl-6">
+                        <li>Fetching real-time quotes (e.g., `get_realtime_quote(symbol, broker)`).</li>
+                        <li>Fetching historical data (e.g., `get_historical_data(symbol, timeframe, broker)`).</li>
+                        <li>Placing test orders (e.g., `place_test_order(symbol, quantity, order_type, broker)`).</li>
+                    </ul>
+                </li>
+                <li><strong>Initial Data Ingestion Agent:</strong> Create an ADK agent (e.g., `aergia_data_ingestor`) that uses your new Broker API Connector tools to fetch current prices for key assets (e.g., SPY, BTC, ES Futures) and publishes them to a <strong>Google Cloud Pub/Sub topic</strong> (e.g., `market-data-raw`).</li>
+                <li><strong>LLM Integration for Sentiment (Initial):</strong> Create a separate ADK agent (e.g., `aergia_sentiment_analyzer`) that takes a sample news headline, uses `Vertex AI` (with Gemini models) or `LiteLLM` (for other LLMs if desired) to analyze its sentiment, and publishes the result to another Pub/Sub topic (e.g., `sentiment-signals`).</li>
+                <li><strong>API Key Refresh Management:</strong> Implement a robust mechanism on GCP (e.g., a <strong>Google Cloud Function</strong> triggered by <strong>Cloud Scheduler</strong>) to handle the 7-day OAuth token refresh for Schwab's API and refresh other API keys as needed. This function will update credentials in Google Secret Manager, and your agents will re-read them.</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold mb-2 text-blue-600">Stage 3: Structured Data & Persistent Memory (2-3 Weeks)</h3>
+            <ul class="list-disc pl-6 mb-4 text-gray-700">
+                <li><strong>ADK Crash Course Module 2.4 & 3:</strong> Focus on "Ensuring Data Consistency with Structured Outputs" (using Pydantic models) and "Managing Memory and Conversations" (sessions and persistent storage).</li>
+                <li><strong>Data Models for Trading:</strong> Define Python `Pydantic` models for Project Aergia's core data structures: `MarketData` (standardized quotes, volumes), `TradeSignal` (structured buy/sell recommendations with metadata), `PortfolioState` (current holdings, P&L), `OrderDetails`, `ExecutionReport`.</li>
+                <li><strong>Structured Outputs for Signals:</strong> Configure your `aergia_signal_generator` ADK agent to use `output_schema` with your `TradeSignal` Pydantic model. This ensures every signal it generates is consistently formatted.</li>
+                <li>
+                    <strong>Persistent State Management:</strong>
+                    <ul class="list-disc pl-6">
+                        <li>Set up a <strong>Google Cloud SQL</strong> instance (e.g., PostgreSQL) for Project Aergia's central, persistent database.</li>
+                        <li>Integrate `DatabaseSessionService` (from ADK) with your core agents. The `aergia_risk_manager` and `aergia_position_keeper` nodes will primarily use this to store and retrieve `PortfolioState`, `TradeHistory`, and other long-term data.</li>
+                        <li>Ensure that any modifications made by agent tools (e.g., when a trade is executed) to `tool_context.state` are automatically persisted to Cloud SQL.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3 class="text-xl font-semibold mb-2 text-blue-600">Stage 4: Multi-Agent Orchestration & Advanced Workflows (4-6 Weeks)</h3>
+            <ul class="list-disc pl-6 mb-4 text-gray-700">
+                <li><strong>ADK Crash Course Module 4 & 5:</strong> This is where the core "money maker" architecture comes together. Learn about "Orchestrating Agent Teams" (sub-agent delegation, agent-as-a-tool), "Stateful Multi-Agent Systems," "Customizing Agent Behavior with Callbacks," and "Sophisticated Workflows" (Sequential, Parallel, Loop Agents).</li>
+                <li>
+                    <strong>Implement Core "Money Maker" Nodes as ADK Agents:</strong> Each node (Data Ingestion, Signal Generation, Strategy Execution, Risk Management, LLM/Sentiment, Learning & Optimization) will be implemented as a distinct ADK agent (or a combination of agents).
+                    <ul class="list-disc pl-6">
+                        <li><strong>Data Ingestion:</strong> Could be a `ParallelAgent` running multiple sub-agents, each focused on a specific broker/asset class for concurrent data pulls.</li>
+                        <li><strong>Signal Generation:</strong> Subscribes to `market-data-raw` and `sentiment-signals` Pub/Sub topics. Its instructions will guide it to use its ML models and LLM insights to generate `TradeSignal` objects.</li>
+                        <li><strong>Strategy Execution:</strong> Subscribes to `TradeSignal` Pub/Sub topics. Implement smart order routing logic to select the best broker for the trade. Uses custom tools to interact with broker APIs and publishes `OrderUpdate` messages to a `trade-events` Pub/Sub topic.</li>
+                        <li>
+                            <strong>Risk Management & Position Keeping:</strong> Subscribes to `trade-events` and `market-data-raw` Pub/Sub topics. This crucial node will:
+                            <ul class="list-disc pl-6">
+                                <li>Continuously update `PortfolioState` in Cloud SQL.</li>
+                                <li>Implement <strong>mandatory stop-loss logic</strong> (e.g., using a `before_tool_callback` on the execution tool to check if a stop should be triggered, or as a separate agent that issues close signals).</li>
+                                <li>Manage Greek exposures for options/futures.</li>
+                                <li>Track daily/total drawdown and trigger <strong>circuit breakers</strong> (pausing execution, sending alerts) if limits are hit.</li>
+                            </ul>
+                        </li>
+                        <li><strong>LLM/Sentiment Analysis:</strong> Continuously processes news and publishes sentiment. Can be triggered by `n8n` for less time-sensitive tasks as discussed previously (though the plan stated to avoid `n8n` where possible, for real-time sentiment this would be a dedicated ADK agent).</li>
+                        <li><strong>Learning & Optimization:</strong> Subscribes to `TradeHistory` and `PerformanceMetrics` from Cloud SQL. Implement <strong>reinforcement learning algorithms</strong> to refine trading policies. Use a `LoopAgent` for iterative backtesting and parameter optimization in a simulated environment before deploying new strategies.</li>
+                    </ul>
+                </li>
+                <li><strong>Overall Orchestration with Workflow Agents:</strong> Use a root `SequentialAgent` to define the primary trading pipeline (e.g., `DataIngestion -> SignalGeneration -> RiskCheck -> Execution`). Use `ParallelAgent` where tasks are independent.</li>
+                <li>
+                    <strong>Callbacks for Control & Monitoring:</strong> Implement ADK `Agent`, `Model`, and `Tool` callbacks across various nodes for:
+                    <ul class="list-disc pl-6">
+                        <li>Detailed logging of agent decisions and tool calls to <strong>Google Cloud Logging</strong>.</li>
+                        <li>Pre-execution risk checks (e.g., a `before_tool_callback` on the `StrategyExecution` node to prevent trades that violate risk limits).</li>
+                        <li>Post-execution performance tracking and event publishing to Pub/Sub.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Kubernetes Deployment (GKE):</strong> Transition Project Aergia's modular, containerized nodes to <strong>Google Kubernetes Engine (GKE)</strong>. This provides:
+                    <ul class="list-disc pl-6">
+                        <li><strong>Scalability:</strong> Dynamically scale individual nodes (e.g., more Signal Generation pods during high volatility).</li>
+                        <li><strong>Resilience:</strong> Automatic self-healing and redundancy for continuous operation.</li>
+                        <li><strong>Resource Management:</strong> Efficient allocation of compute resources.</li>
+                        <li><strong>Networking:</strong> Configure GKE networking for low-latency communication between nodes and external broker APIs.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3 class="text-xl font-semibold mb-2 text-blue-600">Stage 5: Optimization, Testing & Live Deployment (Ongoing)</h3>
+            <ul class="list-disc pl-6 mb-4 text-gray-700">
+                <li><strong>Rigorous Backtesting & Simulation:</strong> Conduct extensive, high-fidelity backtesting of all multi-asset day trading strategies using historical data stored in <strong>Google Cloud Storage (GCS)</strong> and <strong>Cloud SQL</strong>. Simulate realistic latency, slippage, and commissions for each broker.</li>
+                <li><strong>Parameter Fine-tuning:</strong> Continuously optimize the hyperparameters of all ML models and trading rules based on backtesting and paper trading results.</li>
+                <li>
+                    <strong>Comprehensive Monitoring & Alerting:</strong>
+                    <ul class="list-disc pl-6">
+                        <li>Set up <strong>Google Cloud Monitoring</strong> dashboards to track key performance indicators (KPIs) like Daily Net Profit, Daily Sharpe Ratio, Maximum Intraday Drawdown, Win Rate, Profit Factor, and Slippage %.</li>
+                        <li>Configure <strong>Google Cloud Logging</strong> for centralized collection and analysis of all agent logs.</li>
+                        <li>Implement critical alerts (e.g., via Cloud Monitoring alerts to email/SMS) for significant drawdowns, API connectivity issues, or unexpected agent behavior.</li>
+                    </ul>
+                </li>
+                <li><strong>Phased Live Rollout:</strong> Begin with paper trading, then a very small portion of capital, gradually increasing exposure as confidence in the agent's performance and stability grows. Maintain strict adherence to risk limits.</li>
+                <li><strong>Continuous Learning & Adaptation:</strong> The Learning & Optimization Node will continuously feed back insights from live trading performance to refine strategies and models, ensuring the agent evolves with market dynamics.</li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        // Simple JavaScript for simulating node activity and updating overall status
+        const outputs = {
+            dataIngestion: [
+                "Fetching real-time quotes from IBKR...",
+                "Normalizing data from Coinbase...",
+                "Market data feed active for SPY, BTC, ES Futures."
+            ],
+            signalGeneration: [
+                "Analyzing momentum for AAPL...",
+                "Identified a short-term breakout signal for ETH.",
+                "No strong signals detected at this moment."
+            ],
+            strategyExecution: [
+                "Placing limit order for BTC on Coinbase...",
+                "Executing multi-leg options spread on Schwab...",
+                "Order filled: SPY call option. Tracking position."
+            ],
+            riskManagement: [
+                "Portfolio risk within limits. Stop-loss active.",
+                "Checking Greek exposures. Delta is neutral.",
+                "Drawdown is currently $20 below threshold."
+            ],
+            llmSentiment: [
+                "Analyzing news: 'FED meeting minutes released'. Sentiment: NEUTRAL.",
+                "Social media buzz on 'AI stock' increasing. Sentiment: BULLISH.",
+                "Earnings call transcript analysis complete. Sentiment: MIXED."
+            ],
+            learningOptimization: [
+                "Running backtest for new arbitrage strategy...",
+                "Reinforcement learning model updating policy parameters.",
+                "Optimization complete. Improved Sharpe Ratio by 0.05."
+            ]
+        };
+
+        let currentCapital = 50000.00;
+        let dailyPnL = 250.00;
+        let maxDrawdown = -150.00;
+
+        function simulateNode(nodeId) {
+            const outputDiv = document.getElementById(nodeId + 'Output');
+            const messages = outputs[nodeId];
+            const randomIndex = Math.floor(Math.random() * messages.length);
+            outputDiv.textContent = messages[randomIndex];
+            outputDiv.classList.add('text-gray-900', 'font-semibold');
+            setTimeout(() => {
+                outputDiv.classList.remove('text-gray-900', 'font-semibold');
+                outputDiv.classList.add('text-gray-600', 'italic');
+            }, 2000); // Reset text after 2 seconds
+        }
+
+        function updateOverallStatus() {
+            // Simulate changes
+            currentCapital += (Math.random() * 500) - 250; // Fluctuate capital
+            dailyPnL = (Math.random() * 500) - 250; // New random P&L
+            maxDrawdown = Math.min(maxDrawdown, (Math.random() * -100) - 50); // Simulating deepening drawdown
+
+            document.getElementById('currentCapital').textContent = `$${currentCapital.toFixed(2)}`;
+            document.getElementById('dailyPnL').textContent = `${dailyPnL >= 0 ? '+' : ''}$${dailyPnL.toFixed(2)}`;
+            document.getElementById('dailyPnL').classList.remove('text-green-600', 'text-red-600');
+            document.getElementById('dailyPnL').classList.add(dailyPnL >= 0 ? 'text-green-600' : 'text-red-600');
+
+            document.getElementById('maxDrawdown').textContent = `$${maxDrawdown.toFixed(2)}`;
+            document.getElementById('maxDrawdown').classList.remove('text-green-600', 'text-red-600');
+            document.getElementById('maxDrawdown').classList.add(maxDrawdown >= 0 ? 'text-green-600' : 'text-red-600');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+# Project Midas - NemoClaw Privacy Router Policy
+# This policy enforces strict network and execution boundaries for the Midas trading agent.
+# Deployed securely within the NVIDIA OpenShell Sandbox.
+
+policy_version: "1.0"
+agent_name: "Project_Midas"
+
+# 1. NETWORK EXFILTRATION RULES
+# Midas is strictly limited to permitted financial APIs.
+network_rules:
+  default_outbound: "DENY"
+  allowed_domains:
+    - "api.schwab.com"    # Midas: Finance
+    - "api.coinbase.com"  # Midas: Crypto
+    - "openrouter.ai"     # Router: DeepSeek/Llama
+    - "fal.ai"            # Chimera: Video Generation
+    - "googleapis.com"    # Prometheus: Gemini AI Studio
+    - "chat.openai.com"   # Athena: ChatLLM
+    - "api.anthropic.com" # Alternative ChatLLM
+    - "api.polygon.io"    # Data feeds
+  
+  # Data Scrubbing (The Privacy Router)
+  privacy_router:
+    enabled: true
+    scrub_targets:
+      - "PII"
+      - "FINANCIAL_ACCOUNT_NUMBERS"
+      - "SSN"
+
+# 2. FILE SYSTEM ACCESS (OpenShell Sandbox)
+# Midas cannot touch your C: drive outside of its designated vault.
+filesystem_rules:
+  default_access: "READ_ONLY"
+  write_access:
+    - "/workspace/aergia/midas/data"
+    - "/tmp/charts"  # Temporary storage for plotly exports
+  deny_access:
+    - "/etc"
+    - "/root"
+    - "/mnt/c/Users/z143d" # Hard block from Windows files
+
+# 3. THREAD / MEMORY LIMITS
+# Prevents Midas from causing an infinite loop that crashes the laptop.
+resource_limits:
+  max_memory_gb: 4
+  max_cpu_cores: 4
+  timeout_seconds: 300 # Terminate stuck trading loops 

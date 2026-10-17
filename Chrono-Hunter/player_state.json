@@ -1,0 +1,24 @@
+{
+  "stats": {
+    "vitality": 100,
+    "temporal_sync": 85,
+    "notoriety": 20
+  },
+  "wallet": {
+    "florins": 160,
+    "rupees": 0,
+    "reichsmarks": 0
+  },
+  "inventory": [
+    "ancient_compass",
+    "spyglass_of_antiquity"
+  ],
+  "vault": [
+    "excalibur"
+  ],
+  "current_era": "1492_rome",
+  "safehouse_upgrades": {
+    "bed_level": 3,
+    "decorations": []
+  }
+}

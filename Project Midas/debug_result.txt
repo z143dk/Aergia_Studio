@@ -1,0 +1,43 @@
+Client init success
+Testing get_price_history for SPY...
+Success History!
+{
+  "symbol": "SPY",
+  "empty": false,
+  "candles": [
+    {
+      "open": 587.89,
+      "high": 591.74,
+      "low": 584.41,
+      "close": 588.22,
+      "volume": 56578757,
+      "datetime": 1735538400000
+    },
+    {
+      "open": 589.905,
+      "high": 590.6399,
+      "low": 584.42,
+      "close": 586.08,
+      "volume": 57052654,
+      "datetime": 1735624800000
+    },
+    {
+      "open": 589.39,
+      "high": 591.13,
+      "low": 580.5,
+      "close": 584.64,
+      "volume": 50203975,
+      
+
+Testing get_quote for SPY...
+Success Quote!
+{
+  "SPY": {
+    "assetMainType": "EQUITY",
+    "assetSubType": "ETF",
+    "quoteType": "NBBO",
+    "realtime": true,
+    "ssid": 1281357639,
+    "symbol": "SPY",
+    "quote": {
+      "52WeekHigh": 69

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Install Aergia Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background: #000;
+            color: #fff;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .card {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #007AFF;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .instructions {
+            color: #888;
+            margin-top: 30px;
+            font-size: 14px;
+            text-align: left;
+            background: #222;
+            padding: 15px;
+            border-radius: 10px;
+        }
+    </style>
+    <script>
+        // REPLACE THIS WITH YOUR MAC IP IF IT CHANGES
+        var MAC_IP = "192.168.0.100";
+        var PORT = "5050";
+        var TARGET = "http://" + MAC_IP + ":" + PORT;
+
+        function go() {
+            window.location.href = TARGET;
+        }
+
+        // Auto redirect after 2 seconds
+        setTimeout(go, 2000);
+    </script>
+</head>
+
+<body>
+    <div class="card">
+        <h1>🚀 Launching Aergia...</h1>
+        <p>Redirecting to your Mac Studio...</p>
+        <p><small>(192.168.0.100:5050)</small></p>
+        <br>
+        <br>
+        <div style="background: #222; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <p style="color: #00d2d3; font-weight: bold; font-size: 20px;">192.168.0.100:5050</p>
+        </div>
+        <a href="http://192.168.0.100:5050" class="btn" style="background: #2ecc71;">TAP HERE TO CONNECT</a>
+
+        <div class="instructions">
+            <strong>📲 How to Install as App:</strong><br><br>
+            1. Wait for page to load.<br>
+            2. Tap the <strong>Share Icon</strong> (Box with arrow).<br>
+            3. Scroll down and tap <strong>"Add to Home Screen"</strong>.<br>
+            4. Tap <strong>Add</strong>.<br><br>
+            <em>Now you have the Aergia icon on your home screen!</em>
+        </div>
+    </div>
+</body>
+
+</html>

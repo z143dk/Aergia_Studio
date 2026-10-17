@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono-Geographic Encarta Hunter</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --border-color: #34495e;
+            --accent-amber: #f39c12;
+            --accent-cyan: #00ffcc;
+            --text-main: #ecf0f1;
+            --panel-bg: rgba(25, 34, 49, 0.75);
+            --crt-glow: 0 0 10px rgba(0, 255, 204, 0.2);
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 255, 204, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(243, 156, 18, 0.05) 0%, transparent 40%);
+        }
+
+        /* Scanline Overlay for CRT Vibe */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 9999;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.4rem;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+            margin: 10px 0;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--accent-amber);
+            letter-spacing: 2px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 20px;
+            height: calc(100vh - 120px);
+        }
+
+        /* Glass Panel Styling */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: var(--crt-glow), inset 0 0 15px rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--accent-amber);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Telemetry Elements */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed var(--border-color);
+            padding: 10px;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .stat-card .label {
+            font-size: 0.7rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--accent-cyan);
+        }
+
+        .gauge-outer {
+            width: 100%;
+            background: #2c3e50;
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .gauge-inner {
+            height: 100%;
+            background: var(--accent-cyan);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Wallet and Inventory Lists */
+        .currency-row {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .item-tag {
+            display: inline-block;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            padding: 4px 8px;
+            margin: 4px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+        }
+
+        input, select, button {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 5px rgba(0,255,204,0.3);
+        }
+
+        button {
+            background: var(--accent-cyan);
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover {
+            background: #00cca3;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+        }
+
+        button.secondary {
+            background: var(--accent-amber);
+        }
+
+        button.secondary:hover {
+            background: #d35400;
+        }
+
+        /* Terminal Logging Panel */
+        .terminal-log {
+            background: black;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 15px;
+            flex-grow: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #2ecc71;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            min-height: 180px;
+        }
+
+        .terminal-line {
+            margin-bottom: 6px;
+        }
+
+        .terminal-line.error {
+            color: #e74c3c;
+        }
+
+        .terminal-line.system {
+            color: var(--accent-amber);
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #111a28;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 8px;
+            z-index: 1000;
+            padding: 25px;
+            width: 400px;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.4);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 999;
+        }
+
+        /* Micro-animations */
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+            100% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌌 CHRONO-GEOGRAPHIC ENCARTA HUNTER</h1>
+        <div class="subtitle">System Module v2.0 // Node Active</div>
+    </header>
+
+    <div class="grid-container">
+        <!-- LEFT COLUMN: Telemetry & Chrono Navigation -->
+        <div class="panel">
+            <div class="section-title">📊 Temporal Telemetry</div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="label">Sync</div>
+                    <div class="value" id="val-sync">100%</div>
+                    <div class="gauge-outer"><div class="gauge-inner" id="gauge-sync" style="width: 100%;"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Vitality</div>
+                    <div class="value" id="val-vit">100%</div>
+                    <div class="gauge-outer"><div class="gauge-inner" id="gauge-vit" style="width: 100%; background: #e74c3c;"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Notoriety</div>
+                    <div class="value" id="val-not">0</div>
+                    <div class="gauge-outer"><div class="gauge-inner" id="gauge-not" style="width: 0%; background: var(--accent-amber);"></div></div>
+                </div>
+            </div>
+
+            <div class="section-title">💼 Wallet Ledger</div>
+            <div id="wallet-panel">
+                <div class="currency-row"><span>Florins (1492 Rome):</span> <strong id="val-florins">500</strong></div>
+                <div class="currency-row"><span>Rupees (ancient India):</span> <strong id="val-rupees">0</strong></div>
+                <div class="currency-row"><span>Reichsmarks (WW2):</span> <strong id="val-reichsmarks">0</strong></div>
+            </div>
+
+            <div class="section-title" style="margin-top: 20px;">🛡️ Chrono-Inventory</div>
+            <div id="inventory-list" style="margin-bottom: 20px;">
+                <!-- Inventory Tags go here -->
+            </div>
+
+            <div class="section-title">🚀 Chrono-Navigation</div>
+            <div class="input-group">
+                <label>Target Era Target</label>
+                <select id="era-select">
+                    <option value="5th_england">5th Century England (Avalon)</option>
+                    <option value="1492_rome">1492 AD Rome (Vatican Vaults)</option>
+                </select>
+            </div>
+            <div class="flex-row">
+                <div class="input-group" style="flex: 1;">
+                    <label>Latitude Coords</label>
+                    <input type="number" id="input-lat" step="0.001" value="51.146">
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>Longitude Coords</label>
+                    <input type="number" id="input-lon" step="0.001" value="-2.699">
+                </div>
+            </div>
+            <button onclick="executeJump()">⚡ Launch Quantum Scan & Jump</button>
+        </div>
+
+        <!-- RIGHT COLUMN: Story Engine & Safehouse Customizer -->
+        <div class="panel">
+            <div class="section-title">📻 Chronicle Stream</div>
+            <div class="terminal-log" id="terminal-screen">
+                <div class="terminal-line system">[SYSTEM INITIALIZED] Welcome, Agent. System ready for coordinate scan.</div>
+            </div>
+
+            <div class="section-title">🏠 Safehouse Customization</div>
+            <div class="flex-row" style="margin-bottom: 20px;">
+                <button onclick="safehouseAction('sleep')" class="secondary">🛏️ Rest Pod (Sync)</button>
+                <button onclick="safehouseAction('eat')" class="secondary">🍲 Local Rations (Vitality)</button>
+                <button onclick="safehouseAction('upgrade_bed')" class="secondary">🛠️ Upgrade Quarters (Rest)</button>
+            </div>
+
+            <div class="section-title">⚒️ Crafting Table</div>
+            <div class="flex-row" style="margin-bottom: 20px;">
+                <button onclick="craftItem('spyglass_of_antiquity')" style="flex: 1;">Craft Spyglass of Antiquity</button>
+            </div>
+
+            <div class="section-title">⚖️ Historical Side-Gigs</div>
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 4px; border: 1px dashed var(--border-color);">
+                <div style="font-size: 0.85rem; margin-bottom: 10px; color: var(--accent-cyan);">Verify Historical Ledger Math (Audit Verification):</div>
+                <div id="gig-math-problem" style="font-size: 1.1rem; font-weight: bold; margin-bottom: 10px;">5 + 5 = ?</div>
+                <div class="flex-row">
+                    <input type="number" id="gig-answer" placeholder="Enter sum..." style="flex: 1;">
+                    <button onclick="submitSidegig()" style="background: var(--accent-amber);">Submit Audit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RELIC MODAL -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal()"></div>
+    <div class="modal" id="relic-modal">
+        <h2 style="font-family: 'Press Start 2P'; font-size: 0.9rem; color: var(--accent-cyan); margin-top: 0;" id="relic-title">RELIC DETECTED</h2>
+        <p id="relic-lore" style="font-size: 0.9rem; line-height: 1.4; color: var(--text-main);"></p>
+        <button onclick="closeModal()" style="width: 100%;">Close Document</button>
+    </div>
+
+    <script>
+        let currentProblem = { a: 0, b: 0, answer: 0 };
+
+        async function fetchStatus() {
+            const res = await fetch('/api/status');
+            const data = await res.json();
+            updateUI(data);
+        }
+
+        function updateUI(state) {
+            // Stats
+            document.getElementById('val-sync').innerText = state.stats.temporal_sync + '%';
+            document.getElementById('gauge-sync').style.width = state.stats.temporal_sync + '%';
+            
+            document.getElementById('val-vit').innerText = state.stats.vitality + '%';
+            document.getElementById('gauge-vit').style.width = state.stats.vitality + '%';
+            
+            document.getElementById('val-not').innerText = state.stats.notoriety;
+            document.getElementById('gauge-not').style.width = state.stats.notoriety + '%';
+
+            // Wallet
+            document.getElementById('val-florins').innerText = state.wallet.florins;
+            document.getElementById('val-rupees').innerText = state.wallet.rupees;
+            document.getElementById('val-reichsmarks').innerText = state.wallet.reichsmarks;
+
+            // Inventory
+            const invContainer = document.getElementById('inventory-list');
+            invContainer.innerHTML = '';
+            state.inventory.forEach(item => {
+                const span = document.createElement('span');
+                span.className = 'item-tag';
+                span.innerText = item.replace(/_/g, ' ').toUpperCase();
+                invContainer.appendChild(span);
+            });
+            
+            // Vault
+            state.vault.forEach(relic => {
+                const span = document.createElement('span');
+                span.className = 'item-tag';
+                span.style.borderColor = 'var(--accent-amber)';
+                span.style.background = 'rgba(243, 156, 18, 0.1)';
+                span.innerText = `🏆 ${relic.replace(/_/g, ' ').toUpperCase()}`;
+                invContainer.appendChild(span);
+            });
+        }
+
+        function writeLog(text, type = 'system') {
+            const screen = document.getElementById('terminal-screen');
+            const line = document.createElement('div');
+            line.className = `terminal-line ${type}`;
+            const time = new Date().toLocaleTimeString();
+            line.innerText = `[${time}] ${text}`;
+            screen.appendChild(line);
+            screen.scrollTop = screen.scrollHeight;
+        }
+
+        async function executeJump() {
+            const lat = document.getElementById('input-lat').value;
+            const lon = document.getElementById('input-lon').value;
+            const era = document.getElementById('era-select').value;
+
+            writeLog(`Commencing jump to Lat: ${lat}, Lon: ${lon} in Era: ${era}...`, 'system');
+
+            try {
+                const res = await fetch('/api/jump', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lat, lon, era })
+                });
+                const data = await res.json();
+                
+                if (data.error) {
+                    writeLog(`Scan Error: ${data.error}`, 'error');
+                    return;
+                }
+
+                updateUI(data.state);
+                writeLog(`Jump coordinates matched. Current Temporal Sync: ${data.state.stats.temporal_sync}%`, 'system');
+
+                if (data.distance !== null) {
+                    writeLog(`Anomalous signal distance: ${data.distance.toFixed(2)} km`, 'system');
+                    if (data.unlocked) {
+                        writeLog(`[SUCCESS] Extracted legendary relic: ${data.relic_name}!`, 'system');
+                        showRelicModal(data.relic_name, data.lore);
+                    } else if (data.missing_tool) {
+                        writeLog(`[ALERT] Signal source located. Extract failed. Requires tool: ${data.missing_tool}`, 'error');
+                    }
+                } else {
+                    writeLog("No timeline anomalies detected in scanning radius.", 'system');
+                }
+            } catch (e) {
+                writeLog(`Jump failed: ${e.message}`, 'error');
+            }
+        }
+
+        async function craftItem(item) {
+            try {
+                const res = await fetch('/api/craft', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ result: item })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    writeLog(`Crafting failed: ${data.error}`, 'error');
+                } else {
+                    writeLog(data.message, 'system');
+                    updateUI(data.state);
+                }
+            } catch (e) {
+                writeLog(`Crafting failed: ${e.message}`, 'error');
+            }
+        }
+
+        async function safehouseAction(action) {
+            try {
+                const res = await fetch('/api/safehouse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    writeLog(`Quarter Command Failed: ${data.error}`, 'error');
+                } else {
+                    writeLog(data.message, 'system');
+                    updateUI(data.state);
+                }
+            } catch (e) {
+                writeLog(`Quarter Action Failed: ${e.message}`, 'error');
+            }
+        }
+
+        function generateProblem() {
+            const a = Math.floor(Math.random() * 80) + 10;
+            const b = Math.floor(Math.random() * 80) + 10;
+            currentProblem = { a, b, answer: a + b };
+            document.getElementById('gig-math-problem').innerText = `${a} + ${b} = ?`;
+            document.getElementById('gig-answer').value = '';
+        }
+
+        async function submitSidegig() {
+            const ans = document.getElementById('gig-answer').value;
+            try {
+                const res = await fetch('/api/sidegig', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        answer: ans,
+                        expected: currentProblem.answer
+                    })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    writeLog(data.error, 'error');
+                } else {
+                    writeLog(data.message, 'system');
+                    updateUI(data.state);
+                    generateProblem();
+                }
+            } catch (e) {
+                writeLog(`Side-gig failed: ${e.message}`, 'error');
+            }
+        }
+
+        function showRelicModal(name, lore) {
+            document.getElementById('relic-title').innerText = `🏆 Relic Decoded: ${name}`;
+            document.getElementById('relic-lore').innerText = lore;
+            document.getElementById('relic-modal').style.display = 'block';
+            document.getElementById('modal-overlay').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('relic-modal').style.display = 'none';
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchStatus();
+            generateProblem();
+        });
+    </script>
+</body>
+</html>

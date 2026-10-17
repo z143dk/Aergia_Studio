@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aergia Visual Sorter</title>
+    <style>
+        body { background-color: #1a1a1a; color: #ddd; font-family: sans-serif; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: #2a2a2a; padding: 10px; border-radius: 8px; text-align: center; }
+        img { max-width: 100%; height: auto; border-radius: 4px; border: 2px solid #444; }
+        select { width: 100%; padding: 8px; margin-top: 10px; background: #333; color: white; border: 1px solid #555; }
+        .filename { font-size: 0.8em; color: #888; margin-bottom: 5px; word-break: break-all; }
+        #output-area { margin-top: 30px; padding: 20px; background: #000; border: 1px solid #444; }
+        button { padding: 10px 20px; background: #007acc; color: white; border: none; cursor: pointer; font-size: 1.1em; }
+        button:hover { background: #005f9e; }
+    </style>
+</head>
+<body>
+    <h1>🧿 Aergia Visual Sorter</h1>
+    <p>Match the generated images to their Canon names. When done, click "Generate Rename Script" and run it in PowerShell.</p>
+    
+    <div class="grid">
+
+    </div>
+
+    <div id="output-area">
+        <h3>PowerShell Rename Script</h3>
+        <textarea id="script-box" rows="15" style="width:100%; background:#111; color:#0f0; font-family:monospace;"></textarea>
+        <br><br>
+        <button onclick="copyScript()">Copy to Clipboard</button>
+    </div>
+
+    <script>
+        function updateScript() {
+            let script = "# Rename Assets Script\n";
+            script += "$root = 'C:\\Users\\z143d\\Aergia_Studio'\n\n";
+            
+            const selects = document.querySelectorAll('select');
+            selects.forEach(sel => {
+                if (sel.value) {
+                    const original = sel.id.replace('sel_', '');
+                    const target = sel.value;
+                    script += `Rename-Item -Path "$root\\${original}" -NewName "${target}" -Force\n`;
+                    script += `Write-Host "Renamed ${original} -> ${target}"\n`;
+                }
+            });
+            
+            document.getElementById('script-box').value = script;
+        }
+
+        function copyScript() {
+            const copyText = document.getElementById("script-box");
+            copyText.select();
+            document.execCommand("copy");
+            alert("Script copied! Paste into PowerShell.");
+        }
+    </script>
+</body>
+</html>

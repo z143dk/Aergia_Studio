@@ -1,0 +1,22 @@
+# Aergia Studio Unified Requirements
+# Install with: pip install -r requirements_cross_platform.txt
+
+# Core GUI & Env
+customtkinter>=5.2.1
+python-dotenv>=1.0.0
+Pillow>=10.0.0
+packaging
+
+# Web/API
+flask>=3.0.0
+flask-cors>=4.0.0
+requests>=2.31.0
+
+# AI & Automation (Midas)
+google-genai
+google-cloud-aiplatform
+pyautogui
+
+# Finance (Plutus/Midas)
+yfinance
+finvizfinance

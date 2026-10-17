@@ -1,0 +1,12 @@
+﻿OK       aergia_dashboard.py
+OK       intelligence_router.py
+MISSING  midas_home.py
+MISSING  hyperion_director.py
+MISSING  hyperion_gui.py
+MISSING  chimera.db
+MISSING  project-chimera\backend-flask\app.py
+MISSING  project-chimera\backend-flask\worker.py
+C:\Users\z143d\AppData\Local\Microsoft\WindowsApps\python.exe
+C:\Users\z143d\AppData\Local\Programs\Python\Python312\python.exe
+pip 25.3 from C:\Users\z143d\AppData\Local\Programs\Python\Python312\Lib\site-packages\pip (python 3.12)
+

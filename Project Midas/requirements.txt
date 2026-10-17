@@ -1,0 +1,13 @@
+pyautogui
+python-dotenv
+google-cloud-aiplatform
+Pillow
+customtkinter
+packaging
+google-genai
+requests
+yfinance
+finvizfinance
+matplotlib
+mplfinance
+coinbase-advanced-py

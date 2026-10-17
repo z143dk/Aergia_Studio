@@ -1,0 +1,10 @@
+flask
+gunicorn
+moviepy>=2.0.0
+google-cloud-storage
+google-cloud-texttospeech
+google-cloud-aiplatform
+Werkzeug>=2.0.0,<3.0.0
+cloud-sql-python-connector
+pg8000
+sqlalchemy

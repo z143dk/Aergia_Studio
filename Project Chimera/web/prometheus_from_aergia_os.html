@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Prometheus: Content Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+        }
+        .code-block {
+            background-color: #1f2937;
+            color: #d1d5db;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .step-number {
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-6 max-w-4xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Project Prometheus</h1>
+            <p class="text-lg text-gray-600 mt-2">The AI-Powered Content Generation Engine</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Column: Setup Guide -->
+            <div class="md:col-span-1">
+                <h2 class="text-2xl font-bold mb-4">Prometheus Setup Guide</h2>
+
+                <div class="card">
+                    <div class="flex items-start">
+                        <div class="step-number">1</div>
+                        <div>
+                            <h3 class="text-lg font-semibold">Save This File</h3>
+                            <p class="text-gray-600">Save this entire code as a new file on your computer named `prometheus.html`.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="flex items-start">
+                        <div class="step-number">2</div>
+                        <div>
+                            <h3 class="text-lg font-semibold">Create Your "Key"</h3>
+                            <p class="text-gray-600 mb-2">This app needs a special key (an OAuth Client ID) to securely talk to your Google Cloud project. This is a one-time setup.</p>
+                            <ol class="list-decimal list-inside mt-2 space-y-1 text-sm">
+                                <li>Go to the <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="text-indigo-600 hover:underline font-bold">Google Cloud Credentials page</a>.</li>
+                                <li>Click "+ CREATE CREDENTIALS" and select "OAuth client ID".</li>
+                                <li>For "Application type", select "Web application".</li>
+                                <li>Give it a name, like "Prometheus Engine Client".</li>
+                                <li>Under "Authorized JavaScript origins", click "+ ADD URI" and enter `http://localhost:8000`.</li>
+                                <li>Click "CREATE". A window will pop up. **Copy the "Client ID"** it gives you.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="card">
+                    <div class="flex items-start">
+                        <div class="step-number">3</div>
+                        <div>
+                            <h3 class="text-lg font-semibold">Run a Local Server</h3>
+                            <p class="text-gray-600">You cannot just double-click the file. Open a terminal, navigate to where you saved `prometheus.html`, and run:</p>
+                            <div class="code-block my-2 text-sm">python -m http.server 8000</div>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="card">
+                    <div class="flex items-start">
+                        <div class="step-number">4</div>
+                        <div>
+                            <h3 class="text-lg font-semibold">Launch Prometheus</h3>
+                            <p class="text-gray-600">Open your browser and go to:</p>
+                             <div class="code-block my-2 text-sm">http://localhost:8000/prometheus.html</div>
+                             <p class="text-gray-600 mt-2">Paste your Client ID into the app, sign in, and start creating!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: The App -->
+            <div class="md:col-span-1">
+                 <div class="card sticky top-6">
+                    <h2 class="text-2xl font-bold mb-4 text-center">Content Engine</h2>
+                    
+                    <div id="setup-container">
+                        <label for="client-id-input" class="block text-sm font-medium text-gray-700 mb-1">Paste Your OAuth Client ID:</label>
+                        <input type="text" id="client-id-input" placeholder="Paste your key here to activate the app" class="w-full p-2 border rounded-md shadow-sm">
+                    </div>
+
+                    <div id="auth-container" class="text-center mt-4 hidden">
+                        <p id="auth-message" class="text-gray-600 mb-2 text-sm">App activated. Sign in to connect to Google Cloud.</p>
+                        <button id="auth-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition w-full">Sign In with Google</button>
+                    </div>
+
+                    <div id="generator-container" class="hidden mt-4">
+                        <label for="prompt-input" class="block text-sm font-medium text-gray-700 mb-1">Video Prompt:</label>
+                        <textarea id="prompt-input" rows="8" class="w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500" placeholder="A cinematic, vlog-style shot of Bigfoot..."></textarea>
+                        <button id="generate-button" class="bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition w-full mt-3">Generate Video</button>
+
+                        <div id="result-area" class="mt-6 text-center">
+                            <div id="spinner" class="hidden">
+                                <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <p class="mt-2 text-gray-600">Generating video... this may take a few minutes.</p>
+                            </div>
+                            <div id="video-container" class="hidden">
+                                 <video id="result-video" class="w-full rounded-lg shadow-lg" controls></video>
+                                 <a id="download-link" class="inline-block bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-green-700 transition mt-4">Download Video Clip</a>
+                            </div>
+                             <div id="error-message" class="hidden p-4 bg-red-100 text-red-700 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const PROJECT_ID = 'project-aergia-core-platform';
+        const LOCATION = 'us-central1';
+        let CLIENT_ID = ''; 
+        const SCOPES = 'https://www.googleapis.com/auth/cloud-platform';
+
+        // --- DOM Elements ---
+        const clientIdInput = document.getElementById('client-id-input');
+        const authButton = document.getElementById('auth-button');
+        const generateButton = document.getElementById('generate-button');
+        const setupContainer = document.getElementById('setup-container');
+        const authContainer = document.getElementById('auth-container');
+        const generatorContainer = document.getElementById('generator-container');
+        const promptInput = document.getElementById('prompt-input');
+        const spinner = document.getElementById('spinner');
+        const videoContainer = document.getElementById('video-container');
+        const resultVideo = document.getElementById('result-video');
+        const downloadLink = document.getElementById('download-link');
+        const errorMessage = document.getElementById('error-message');
+        
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+
+        // --- Load Google APIs ---
+        function initializeGis() {
+            CLIENT_ID = clientIdInput.value;
+            if (!CLIENT_ID) {
+                alert('Please paste your OAuth Client ID to activate the app.');
+                return;
+            }
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // defined later
+            });
+            gisInited = true;
+            authContainer.classList.remove('hidden');
+        }
+
+        gapi.load('client', async () => {
+            await gapi.client.init({});
+            gapiInited = true;
+        });
+
+        // --- Event Listeners ---
+        clientIdInput.addEventListener('change', () => {
+           if(clientIdInput.value) {
+               initializeGis();
+           }
+        });
+
+        authButton.addEventListener('click', () => {
+            if (!gisInited) {
+                 alert('Please paste your Client ID first.');
+                return;
+            }
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    throw (resp);
+                }
+                // Successful auth
+                setupContainer.classList.add('hidden');
+                authContainer.classList.add('hidden');
+                generatorContainer.classList.remove('hidden');
+            };
+
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({prompt: 'consent'});
+            } else {
+                 tokenClient.requestAccessToken({prompt: ''});
+            }
+        });
+
+        generateButton.addEventListener('click', async () => {
+            const prompt = promptInput.value;
+            if (!prompt) {
+                alert('Please enter a video prompt.');
+                return;
+            }
+
+            // Reset UI
+            spinner.classList.remove('hidden');
+            videoContainer.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            generateButton.disabled = true;
+
+            const accessToken = gapi.client.getToken().access_token;
+            const apiUrl = `https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/gemini-1.5-pro-preview-0409:generateContent`;
+
+            const requestBody = {
+                "contents": {
+                    "role": "USER",
+                    "parts": [{ "text": prompt }]
+                },
+                 "generation_config": {
+                    "response_mime_type": "video/mp4"
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API Error: ${errorData.error.message || JSON.stringify(errorData)}`);
+                }
+
+                const data = await response.json();
+
+                if (data.candidates && data.candidates[0].content.parts[0].blob) {
+                    const videoData = data.candidates[0].content.parts[0].blob.data;
+                    const videoSrc = `data:video/mp4;base64,${videoData}`;
+                    
+                    resultVideo.src = videoSrc;
+                    downloadLink.href = videoSrc;
+                    downloadLink.download = `prometheus_clip_${Date.now()}.mp4`;
+
+                    videoContainer.classList.remove('hidden');
+                } else {
+                    throw new Error('No video data received from API. The model may have refused the prompt or an unknown error occurred.');
+                }
+
+            } catch (error) {
+                errorMessage.textContent = `Error: ${error.message}`;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                spinner.classList.add('hidden');
+                generateButton.disabled = false;
+            }
+        });
+
+    </script>
+    <script async defer src="https://accounts.google.com/gsi/client"></script>
+
+</body>
+</html>

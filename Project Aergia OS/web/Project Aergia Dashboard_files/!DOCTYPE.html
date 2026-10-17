@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI Trading Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #e2e8f0; /* Slate 200 */
+        }
+        .gradient-bg {
+            background-image: linear-gradient(to right top, #1a202c, #1f2937, #334155);
+        }
+        .profit-text {
+            color: #10b981; /* Emerald 500 */
+        }
+        .loss-text {
+            color: #ef4444; /* Red 500 */
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.7); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #1f2937; /* Slate 800 */
+            margin: auto;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .close-button {
+            color: #94a3b8;
+            float: right;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #e2e8f0;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .scrollable-content {
+            max-height: 400px; /* Adjust as needed */
+            overflow-y: auto;
+            background-color: #0f172a;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="p-6 md:p-10">
+    <div class="container mx-auto">
+        <h1 class="text-4xl md:text-5xl font-bold text-center mb-8 text-white">Agentic AI Trading Blueprint</h1>
+
+        <!-- Vision and Goals Section -->
+        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-8 border border-slate-700">
+            <h2 class="text-3xl font-semibold mb-4 text-white">Vision & Current Status</h2>
+            <p class="text-slate-300 leading-relaxed mb-4">
+                The overarching goal is to develop an agentic AI capable of consistently generating profits in financial markets.
+                The project started with a crucial learning period focusing on **swing trading equity options** with an initial capital of **$500**, aiming for an incredibly ambitious **100% growth every other day** to achieve our target of growing the account past **$50,000**. This phase emphasized building a capital-efficient and risk-averse system under severe constraints.
+            </p>
+            <p class="text-slate-300 leading-relaxed mb-4">
+                The immediate next phase involves securing significant capital ($50,000+) and transitioning to multi-asset day trading strategies to achieve rapid and sustainable capital growth.
+            </p>
+            <div class="flex flex-col md:flex-row justify-around items-center text-center mt-6">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-xl text-slate-400">Initial Investment</p>
+                    <p class="text-4xl font-bold text-emerald-400">$500</p>
+                </div>
+                <div class="mb-4 md:mb-0">
+                    <p class="text-xl text-slate-400">Daily Growth Target (Every Other Day)</p>
+                    <p class="text-4xl font-bold text-emerald-400">100%</p>
+                </div>
+                <div>
+                    <p class="text-xl text-slate-400">Target Account Size</p>
+                    <p class="text-4xl font-bold text-emerald-400">$50,000+</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Metrics Dashboard -->
+        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-8 border border-slate-700">
+            <h2 class="text-3xl font-semibold mb-4 text-white">Live Trading Metrics (Simulated)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md text-center">
+                    <p class="text-lg text-slate-400">Current P&L Today</p>
+                    <p id="currentPnl" class="text-3xl font-bold profit-text">$0.00</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md text-center">
+                    <p class="text-lg text-slate-400">Account Balance</p>
+                    <p id="accountBalance" class="text-3xl font-bold text-white">$500.00</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md text-center">
+                    <p class="text-lg text-slate-400">Daily Sharpe Ratio</p>
+                    <p id="sharpeRatio" class="text-3xl font-bold text-indigo-400">N/A</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md text-center">
+                    <p class="text-lg text-slate-400">Max Intraday Drawdown</p>
+                    <p id="maxDrawdown" class="text-3xl font-bold text-red-400">$0.00</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md text-center">
+                    <p class="text-lg text-slate-400">Win Rate</p>
+                    <p id="winRate" class="text-3xl font-bold text-blue-400">N/A</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md text-center">
+                    <p class="text-lg text-slate-400">Profit Factor</p>
+                    <p id="profitFactor" class="text-3xl font-bold text-teal-400">N/A</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Components Section -->
+        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-8 border border-slate-700">
+            <h2 class="text-3xl font-semibold mb-4 text-white">Agent Core Components</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold text-white mb-2">Data Ingestion & Preprocessing</h3>
+                    <p class="text-slate-400">Pulls market data, news, sentiment. Preprocesses for analysis.</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold text-white mb-2">NLP & Sentiment Analysis (Gemini)</h3>
+                    <p class="text-slate-400">Quantifies news/social media sentiment, identifies rumors. <span class="font-semibold text-indigo-300">Powered by Gemini.</span></p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold text-white mb-2">Signal Generation (ML Models)</h3>
+                    <p class="text-slate-400">Generates trading signals and predictions using XGBoost, LSTMs, etc.</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold text-white mb-2">Option Pricing & Greeks</h3>
+                    <p class="text-slate-400">Calculates theoretical option prices and sensitivities (Delta, Vega, Theta).</p>
+                </div>
+                <div class="bg-red-900/40 p-5 rounded-xl shadow-md border border-red-700">
+                    <h3 class="text-xl font-bold text-white mb-2">Risk Management (Crucial!)</h3>
+                    <p class="text-red-300">Monitors portfolio risk, dynamically sizes positions, sets intelligent stop-losses, and implements circuit breakers.</p>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold text-white mb-2">Execution & Order Management</h3>
+                    <p class="text-slate-400">Low-latency order placement via brokerage APIs (Schwab, IBKR, Crypto).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- LLM Role: Teaching Trades and Insights -->
+        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-8 border border-slate-700">
+            <h2 class="text-3xl font-semibold mb-4 text-white">LLM (Gemini) - Trading Coach & Adaptability</h2>
+            <p class="text-slate-300 leading-relaxed mb-4">
+                The **Gemini LLM** is crucial for the agent's continuous learning and rapid adaptation, especially with the ambitious growth target. It performs:
+            </p>
+            <ul class="list-disc list-inside text-slate-300 space-y-2 mb-4">
+                <li>**Real-time Post-Trade Analysis:** Ingests trade outcomes and provides human-readable explanations of success/failure.</li>
+                <li>**Meta-Learning for Agents:** Identifies patterns to refine other agent parameters (e.g., sentiment misinterpretations).</li>
+                <li>**Strategy Adaptation & Generation:** Suggests new strategies or refines existing ones based on market shifts.</li>
+                <li>**Handling Unforeseen Events:** Analyzes unique market situations and recommends adaptive measures.</li>
+            </ul>
+            <div class="scrollable-content">
+                <h3 class="text-xl font-bold text-white mb-2">Recent LLM Insights:</h3>
+                <ul id="llmInsights" class="text-slate-400 space-y-3">
+                    <!-- LLM insights will be dynamically added here -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Control Center -->
+        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-8 border border-slate-700 flex flex-col items-center">
+            <h2 class="text-3xl font-semibold mb-4 text-white">Control Center</h2>
+            <button id="killSwitchBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                <span id="killSwitchText">Activate Kill Switch</span>
+            </button>
+            <p id="agentStatus" class="mt-4 text-xl text-emerald-400 font-semibold">Agent Status: ACTIVE</p>
+        </div>
+
+    </div>
+
+    <!-- Custom Modal for Alerts -->
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle" class="text-2xl font-bold text-white mb-4"></h3>
+            <p id="modalMessage" class="text-slate-300"></p>
+            <button class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const currentPnlEl = document.getElementById('currentPnl');
+        const accountBalanceEl = document.getElementById('accountBalance');
+        const sharpeRatioEl = document.getElementById('sharpeRatio');
+        const maxDrawdownEl = document.getElementById('maxDrawdown');
+        const winRateEl = document.getElementById('winRate');
+        const profitFactorEl = document.getElementById('profitFactor');
+        const llmInsightsEl = document.getElementById('llmInsights');
+        const killSwitchBtn = document.getElementById('killSwitchBtn');
+        const killSwitchText = document.getElementById('killSwitchText');
+        const agentStatusEl = document.getElementById('agentStatus');
+
+        const customModal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+
+        // Initial State
+        let accountBalance = 500.00;
+        let currentPnl = 0.00;
+        let agentActive = true;
+        let tradeCount = 0;
+        let winCount = 0;
+        let totalProfit = 0;
+        let totalLoss = 0;
+        let maxDailyPnl = 0;
+        let minDailyPnl = 0;
+        let dailyPnlHistory = [];
+
+        // Function to display custom modal
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            customModal.style.display = 'flex'; // Use flex to center content
+        }
+
+        // Function to close custom modal
+        function closeModal() {
+            customModal.style.display = 'none';
+        }
+
+        // Simulate market data and agent activity
+        function updateMetrics() {
+            if (!agentActive) return;
+
+            // Simulate P&L for aggressive growth
+            // Aiming for 100% growth every other day means averaging ~41.4% daily if compounding
+            // Or, more simply, 100% every two 'days'
+            const dailyGrowthTarget = 0.414; // Approx. sqrt(2) - 1 for daily equivalent of 100% every two days
+            const dailyFluctuation = (Math.random() - 0.5) * 0.1; // +/- 5% daily noise
+            let simulatedDailyChange = accountBalance * (dailyGrowthTarget + dailyFluctuation);
+
+            // Ensure P&L contributes towards the aggressive goal
+            if (accountBalance < 50000 && tradeCount % 2 === 0) { // Every other "simulated day" try for 100%
+                simulatedDailyChange = Math.random() > 0.3 ? accountBalance * (1.00 + (Math.random() * 0.2)) : accountBalance * (-0.1 - (Math.random() * 0.1)); // High chance of big win, small chance of smaller loss
+            } else {
+                simulatedDailyChange = Math.random() > 0.4 ? accountBalance * (0.05 + (Math.random() * 0.1)) : accountBalance * (-0.05 - (Math.random() * 0.05)); // More moderate moves on "off days"
+            }
+
+
+            currentPnl = simulatedDailyChange;
+            accountBalance += currentPnl;
+
+            // Ensure account doesn't go below $0
+            if (accountBalance < 0) {
+                accountBalance = 0;
+                showModal("Account Blown!", "Your account has been depleted. The kill switch was activated.");
+                toggleKillSwitch(); // Automatically activate kill switch
+            }
+
+            // Update P&L color
+            if (currentPnl >= 0) {
+                currentPnlEl.classList.remove('loss-text');
+                currentPnlEl.classList.add('profit-text');
+            } else {
+                currentPnlEl.classList.remove('profit-text');
+                currentPnlEl.classList.add('loss-text');
+            }
+
+            // Update UI elements
+            currentPnlEl.textContent = `$${currentPnl.toFixed(2)}`;
+            accountBalanceEl.textContent = `$${accountBalance.toFixed(2)}`;
+
+            // Calculate other metrics (simplified)
+            dailyPnlHistory.push(currentPnl);
+            if (dailyPnlHistory.length > 30) dailyPnlHistory.shift(); // Keep last 30 days
+
+            let avgDailyReturn = dailyPnlHistory.reduce((a, b) => a + b, 0) / dailyPnlHistory.length;
+            let stdDevDailyReturn = Math.sqrt(dailyPnlHistory.map(x => Math.pow(x - avgDailyReturn, 2)).reduce((a, b) => a + b, 0) / dailyPnlHistory.length);
+            sharpeRatioEl.textContent = stdDevDailyReturn !== 0 ? (avgDailyReturn / stdDevDailyReturn).toFixed(2) : 'N/A';
+
+            maxDailyPnl = Math.max(maxDailyPnl, currentPnl);
+            minDailyPnl = Math.min(minDailyPnl, currentPnl);
+            maxDrawdownEl.textContent = `$${Math.abs(minDailyPnl).toFixed(2)}`;
+            maxDrawdownEl.classList.toggle('loss-text', minDailyPnl < 0);
+
+
+            // Simulate trade wins/losses for win rate and profit factor
+            if (currentPnl > 0) {
+                winCount++;
+                totalProfit += currentPnl;
+            } else {
+                totalLoss += currentPnl;
+            }
+            tradeCount++;
+
+            winRateEl.textContent = `${((winCount / tradeCount) * 100).toFixed(1)}%`;
+            profitFactorEl.textContent = totalLoss !== 0 ? (Math.abs(totalProfit / totalLoss)).toFixed(2) : 'N/A';
+
+            // Add mock LLM insight every few updates
+            if (tradeCount % 5 === 0) {
+                addLlmInsight();
+            }
+
+            // Check for $50,000+ target
+            if (accountBalance >= 50000 && accountBalance < 500000) {
+                showModal("Goal Reached!", `Congratulations! Your account has reached over $${accountBalance.toFixed(2)}. Time to transition to multi-asset day trading!`);
+                toggleKillSwitch(); // Stop simulation
+            } else if (accountBalance >= 500000) { // A higher, unlikely target
+                 showModal("Unbelievable!", `Your agent has surpassed all expectations, reaching $${accountBalance.toFixed(2)}!`);
+                 toggleKillSwitch();
+            }
+        }
+
+        const llmInsights = [
+            "LLM Insight: The recent long option trade on XYZ failed due to unexpected time decay; consider shorter holding periods for deep OTM options.",
+            "LLM Insight: Sentiment analysis indicates a strong bullish bias on ABC; re-evaluate entry points on pullbacks.",
+            "LLM Insight: Risk Management: Reviewing dynamic stop-loss placements. ATR-based stops appear more effective in current volatile conditions.",
+            "LLM Insight: Identified a new potential strategy: high-volume breakout patterns in liquid ETFs. Recommend backtesting.",
+            "LLM Insight: Post-mortem on yesterday's significant win: precise volatility prediction around earnings was key. Replicate methodology.",
+            "LLM Insight: The market is showing signs of a regime shift to sideways consolidation; adjust option strategies to focus on income generation rather than pure direction.",
+            "LLM Insight: Liquidity filtering for penny options needs further tightening; observe bid-ask spreads more aggressively at entry.",
+            "LLM Insight: Suggesting a deeper dive into futures contract mechanics for the next phase of multi-asset trading.",
+            "LLM Insight: The agent is learning quickly from micro-losses. This iterative feedback loop is crucial for aggressive capital growth.",
+            "LLM Insight: Considering pre-market news sentiment as an additional signal for initial directional bias."
+        ];
+
+        let insightIndex = 0;
+        function addLlmInsight() {
+            if (llmInsightsEl.children.length >= 5) {
+                llmInsightsEl.removeChild(llmInsightsEl.firstElementChild); // Keep max 5 insights
+            }
+            const li = document.createElement('li');
+            li.className = 'text-slate-400 text-sm italic';
+            li.textContent = llmInsights[insightIndex % llmInsights.length];
+            llmInsightsEl.appendChild(li);
+            insightIndex++;
+        }
+
+        // Kill Switch functionality
+        function toggleKillSwitch() {
+            agentActive = !agentActive;
+            if (agentActive) {
+                killSwitchBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                killSwitchBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                killSwitchText.textContent = 'Activate Kill Switch';
+                agentStatusEl.textContent = 'Agent Status: ACTIVE';
+                agentStatusEl.classList.remove('text-red-400');
+                agentStatusEl.classList.add('text-emerald-400');
+                intervalId = setInterval(updateMetrics, 1000); // Resume updates
+                showModal("Agent Reactivated", "The trading agent is now active and monitoring markets.");
+            } else {
+                clearInterval(intervalId); // Stop updates
+                killSwitchBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                killSwitchBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                killSwitchText.textContent = 'Agent Halted';
+                agentStatusEl.textContent = 'Agent Status: HALTED';
+                agentStatusEl.classList.remove('text-emerald-400');
+                agentStatusEl.classList.add('text-red-400');
+                showModal("Agent Halted", "The trading agent has been manually halted. No new trades will be placed.");
+            }
+        }
+
+        killSwitchBtn.addEventListener('click', toggleKillSwitch);
+
+        // Initial update and start simulation
+        updateMetrics();
+        let intervalId = setInterval(updateMetrics, 1000); // Update every 1 second
+        addLlmInsight(); // Add first insight immediately
+    </script>
+</body>
+</html>

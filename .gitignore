@@ -1,0 +1,23 @@
+.env
+__pycache__/
+*.pyc
+.DS_Store
+venv/
+.vscode/
+tmp/
+*.log
+
+# Local database and credentials
+*.db
+*credentials*.json
+*tokens*.json
+paper_account.json
+_backup_before_merge/
+*.exe
+*.zip
+node_modules/
+
+# Plaintext API keys and credentials
+openrouterapi.txt
+config/credentials/
+

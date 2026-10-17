@@ -1,0 +1,12 @@
+[INSTRUCTIONS FOR iPHONE / iPAD]
+
+1. Open the "Files" app on your iPhone/iPad.
+2. Go to iCloud Drive -> Desktop -> Aergia_Studio -> _MOBILE_INSTALL_HELPER
+3. Tap the file named "TAP_ME_TO_INSTALL.html"
+4. It will open Safari and try to connect to your Mac.
+
+[IMPORTANT]
+- Your Mac must be turned ON and AWAKE.
+- If you close your MacBook lid, it will go to sleep and disconnect the phone (unless you are plugged into a monitor + power).
+- Aergia Studio must be running on your Mac.
+- Your phone must be on the SAME WiFi as your Mac.

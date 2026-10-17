@@ -1,0 +1,137 @@
+# main.py
+import os
+import json
+import base64
+from datetime import datetime, timedelta
+import requests
+from google.cloud import secretmanager, pubsub_v1, storage
+
+# --- Configuration ---
+# Your Google Cloud Project ID (set in gcloud config, but good to be explicit)
+PROJECT_ID = os.environ.get('GCP_PROJECT_ID', 'project-aergia-core-platform')
+
+# Secret Manager configuration
+POLYGON_API_KEY_SECRET_ID = "polygon-api-key"
+POLYGON_API_KEY_SECRET_VERSION = "latest"
+
+# Pub/Sub topic for raw market data
+PUBSUB_TOPIC_ID = "market-data-raw"
+
+# GCS bucket for raw data archives
+GCS_BUCKET_NAME = "project-aergia-core-platform-raw-data"
+
+# Polygon.io API base URL
+POLYGON_API_BASE_URL = "https://api.polygon.io"
+
+# --- Clients (initialized once globally for efficiency) ---
+secret_manager_client = secretmanager.SecretManagerServiceClient()
+pubsub_publisher = pubsub_v1.PublisherClient()
+storage_client = storage.Client()
+gcs_bucket = storage_client.bucket(GCS_BUCKET_NAME)
+
+# --- Helper to get API Key ---
+def get_secret_value(secret_id, version_id="latest"):
+    """Fetches a secret from Google Cloud Secret Manager."""
+    name = f"projects/{PROJECT_ID}/secrets/{secret_id}/versions/{version_id}"
+    try:
+        response = secret_manager_client.access_secret_version(request={"name": name})
+        return response.payload.data.decode("UTF-8")
+    except Exception as e:
+        print(f"Error accessing secret '{secret_id}': {e}")
+        raise
+
+# --- Market Data Fetcher Function ---
+def fetch_and_publish_market_data(request):
+    """
+    Cloud Function to fetch daily OHLCV data for a list of tickers
+    and publish to Pub/Sub and save to GCS.
+    Triggered by HTTP request (e.g., from Cloud Scheduler).
+    """
+    print(f"[{datetime.now()}] Starting market data fetch for project {PROJECT_ID}...")
+
+    # Define tickers to fetch data for (you can expand this list)
+    # For a free Polygon.io account, you might be limited to a few requests/minute
+    # So start with a small list like 1-5 tickers.
+    tickers = ["AAPL", "MSFT", "GOOG"]
+
+    # Calculate yesterday's date for daily bars
+    today = datetime.now()
+    yesterday = (today - timedelta(days=1)).strftime('%Y-%m-%d')
+    
+    # Check if it's the weekend (Saturday or Sunday) - no trading data
+    if today.weekday() in [5, 6]: # Monday is 0, Sunday is 6
+        print(f"[{datetime.now()}] It's the weekend. Skipping market data fetch.")
+        return 'Skipped weekend fetch.', 200 # Return 200 for success, as it intentionally skipped
+
+    # Get API Key securely
+    try:
+        polygon_api_key = get_secret_value(POLYGON_API_KEY_SECRET_ID, POLYGON_API_KEY_SECRET_VERSION)
+    except Exception as e:
+        print(f"[{datetime.now()}] Failed to get Polygon API key: {e}")
+        return 'Error: Could not retrieve API key.', 500
+
+    headers = {"Authorization": f"Bearer {polygon_api_key}"}
+    
+    all_fetched_data = []
+
+    for ticker in tickers:
+        print(f"[{datetime.now()}] Fetching data for {ticker} on {yesterday}...")
+        
+        # Polygon.io aggregates endpoint for daily OHLCV
+        # Note: Free tier might have limitations on aggregate data or historical depth
+        url = f"{POLYGON_API_BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/{yesterday}/{yesterday}"
+        
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+            data = response.json()
+
+            if data and data.get('results'):
+                for result in data['results']:
+                    # Add ticker and timestamp for clarity
+                    result['ticker'] = ticker
+                    result['timestamp_human'] = datetime.fromtimestamp(result['t'] / 1000).isoformat()
+                    all_fetched_data.append(result)
+                    print(f"[{datetime.now()}] Fetched data for {ticker}: {result}")
+            else:
+                print(f"[{datetime.now()}] No results found for {ticker} on {yesterday}.")
+
+        except requests.exceptions.RequestException as e:
+            print(f"[{datetime.now()}] Request error for {ticker}: {e}")
+        except json.JSONDecodeError as e:
+            print(f"[{datetime.now()}] JSON decode error for {ticker}: {e}")
+        except Exception as e:
+            print(f"[{datetime.now()}] An unexpected error occurred for {ticker}: {e}")
+
+    # --- Publish to Pub/Sub ---
+    if all_fetched_data:
+        topic_path = pubsub_publisher.topic_path(PROJECT_ID, PUBSUB_TOPIC_ID)
+        messages_published = 0
+        for record in all_fetched_data:
+            data_str = json.dumps(record)
+            message_bytes = data_str.encode("utf-8")
+            try:
+                future = pubsub_publisher.publish(topic_path, message_bytes)
+                future.result() # Wait for the message to be published
+                messages_published += 1
+                print(f"[{datetime.now()}] Published to Pub/Sub: {record['ticker']} - {record['timestamp_human']}")
+            except Exception as e:
+                print(f"[{datetime.now()}] Failed to publish to Pub/Sub: {e}")
+        print(f"[{datetime.now()}] Total {messages_published} messages published to {PUBSUB_TOPIC_ID}.")
+    else:
+        print(f"[{datetime.now()}] No data to publish to Pub/Sub.")
+
+    # --- Save to GCS ---
+    if all_fetched_data:
+        # Create a timestamped file name for archival
+        gcs_filename = f"market_data_raw/{today.strftime('%Y/%m/%d')}/polygon_daily_{today.strftime('%Y%m%d_%H%M%S')}.json"
+        blob = gcs_bucket.blob(gcs_filename)
+        
+        try:
+            blob.upload_from_string(json.dumps(all_fetched_data, indent=2), content_type="application/json")
+            print(f"[{datetime.now()}] Raw data saved to GCS: gs://{GCS_BUCKET_NAME}/{gcs_filename}")
+        except Exception as e:
+            print(f"[{datetime.now()}] Failed to save data to GCS: {e}")
+            
+    print(f"[{datetime.now()}] Market data fetch completed.")
+    return 'Market data fetch initiated successfully!', 200

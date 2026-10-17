@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Aergia: Live Tracking Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .phase-card { background-color: white; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
+        .task-item { display: flex; align-items: start; padding: 0.75rem; border-top: 1px solid #f1f5f9; }
+        .task-item:first-child { border-top: none; }
+        .task-checkbox { margin-top: 5px; margin-right: 1rem; flex-shrink: 0; width: 1.25rem; height: 1.25rem; accent-color: #3b82f6; }
+        .task-label { font-weight: 500; }
+        .task-desc { color: #475569; font-size: 0.875rem; }
+        .progress-bar-bg { background-color: #e2e8f0; border-radius: 9999px; height: 0.75rem; overflow: hidden; }
+        .progress-bar-fg { background-color: #3b82f6; height: 100%; border-radius: 9999px; transition: width 0.5s ease-in-out; }
+        .fatal-error { display: none; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Project Aergia: Live Tracking Dashboard</h1>
+            <p id="welcome-message" class="text-lg text-slate-600 mt-2">Your persistent, cloud-synced guide to success.</p>
+        </header>
+
+        <!-- Auth Section -->
+        <div id="auth-section" class="phase-card text-center">
+             <h2 class="text-xl font-semibold mb-2">Connect to Your Progress</h2>
+             <p class="text-slate-600 mb-4">Sign in with Google to load and save your progress directly to your cloud project.</p>
+             <button id="auth-button" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition" disabled>Initializing...</button>
+        </div>
+        
+        <!-- Fatal Error Section -->
+        <div id="fatal-error-section" class="phase-card fatal-error bg-red-50 text-red-800">
+             <div id="fatal-error-message" class="text-left">Could not load the required configuration.</div>
+        </div>
+
+
+        <!-- Main Content (hidden until auth) -->
+        <main id="main-content" class="hidden">
+            <!-- Overall Progress -->
+            <div class="phase-card">
+                <h2 class="text-xl font-semibold mb-3">Overall Project Progress</h2>
+                <div class="progress-bar-bg">
+                    <div id="overall-progress-bar" class="progress-bar-fg" style="width: 0%;"></div>
+                </div>
+                <p id="overall-progress-text" class="text-center text-sm font-semibold mt-2 text-slate-700">0% Complete</p>
+            </div>
+
+            <!-- Phases will be injected here by JavaScript -->
+            <div id="phases-container"></div>
+        </main>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // --- DOM Elements ---
+        const authSection = document.getElementById('auth-section');
+        const fatalErrorSection = document.getElementById('fatal-error-section');
+        const fatalErrorMessage = document.getElementById('fatal-error-message');
+        const mainContent = document.getElementById('main-content');
+        const authButton = document.getElementById('auth-button');
+        const phasesContainer = document.getElementById('phases-container');
+        const overallProgressBar = document.getElementById('overall-progress-bar');
+        const overallProgressText = document.getElementById('overall-progress-text');
+        const welcomeMessage = document.getElementById('welcome-message');
+        
+        let userId = null;
+        let trackerDocRef = null;
+        let taskState = {};
+
+        // --- Project Data ---
+        const projectPhases = [
+            { id: 'week1', title: 'Week 1: Foundation & Setup', tasks: [ { id: 'p0_budget', label: 'Set Google Cloud Budget Alert', desc: 'Prevent surprise bills. Your credits will be used first.', time: '15 mins' }, { id: 'p0_software', label: 'Acquire Software (Student Discounts)', desc: 'Get Adobe Creative Cloud or CapCut. Start with free YouTube Audio Library.', time: '1 hour' }, { id: 'p1_cli', label: 'Configure gcloud CLI & APIs', desc: 'Authenticate and enable Vertex AI & Cloud AI Companion APIs.', time: '30 mins' }, { id: 'p1_vscode', label: 'Configure VS Code Co-pilot', desc: 'Install Google Cloud Code extension and log in.', time: '15 mins' }, { id: 'p2_firestore', label: 'Enable Firestore Database', desc: 'Create the database in Native Mode and set security rules.', time: '15 mins' } ] },
+            { id: 'week2', title: 'Week 2: First Content & Workflow Test', tasks: [ { id: 'p3_amazon', label: 'Sign Up for Amazon Associates', desc: 'Create your affiliate account. This is your first income stream.', time: '30 mins' }, { id: 'p3_product', label: 'Choose Product & Get Link', desc: 'Pick a recent purchase and generate your unique affiliate link.', time: '15 mins' }, { id: 'p3_generate', label: 'Generate 3-5 Video Clips', desc: 'Use the Prometheus Engine to create clips for your first review.', time: '1 hour' }, { id: 'p3_edit', label: 'Edit & Produce Your First Short', desc: 'Combine clips, add voiceover, music, and text overlays in your editor.', time: '2 hours' } ] },
+            { id: 'weeks3_4', title: 'Weeks 3-4: Content Cadence & Platform Onboarding', tasks: [ { id: 'p4_accounts', label: 'Create Social Profiles', desc: 'Set up YouTube, TikTok, and Instagram with consistent branding.', time: '1 hour' }, { id: 'p4_upload', label: 'Upload First Video & Affiliate Link', desc: 'Post your video and add your affiliate link to the bio/description/pinned comment.', time: '30 mins' }, { id: 'p4_produce7', label: 'Produce 7 Videos for the Week', desc: 'Get into a rhythm. Batch produce one video per day for the next week.', time: '10-12 hours' }, { id: 'p4_schedule', label: 'Schedule Daily Uploads', desc: 'Use scheduling tools to post consistently every day.', time: '1 hour' } ] },
+            { id: 'month2', title: 'Month 2: The Grind & Data Analysis', tasks: [ { id: 'm2_post', label: 'Post 1-2 Videos Daily, Every Day', desc: 'Consistency is king. Do not miss a day. This builds momentum.', time: 'Daily Habit' }, { id: 'm2_analyze', label: 'Weekly Performance Review', desc: 'Every Sunday, check your YouTube Studio analytics. What worked? What failed?', time: '1 hour/week' }, { id: 'm2_engage', label: 'Community Engagement', desc: 'Spend 30 minutes daily replying to comments and engaging with your audience.', time: 'Daily Habit' } ] },
+            { id: 'month3', title: 'Month 3: Optimization & First Monetization', tasks: [ { id: 'm3_ypp', label: 'Apply for YouTube Partner Program (YPP)', desc: 'Once you hit 1k subs and 10M views in 90 days, apply immediately.', time: '30 mins' }, { id: 'm3_affiliate', label: 'Optimize Affiliate Strategy', desc: 'Analyze which products get clicks. Create more content around them.', time: '2 hours/week' }, { id: 'm3_brandoutreach', label: 'Prepare a Media Kit', desc: 'Create a 1-page PDF with your stats to send to potential sponsors.', time: '1 hour' } ] }
+        ];
+
+        // --- Functions ---
+        function renderUI() {
+            phasesContainer.innerHTML = '';
+            projectPhases.forEach(phase => {
+                const phaseCard = document.createElement('div');
+                phaseCard.className = 'phase-card';
+                let taskHTML = '';
+                phase.tasks.forEach(task => { const isChecked = taskState[task.id] || false; taskHTML += ` <div class="task-item"> <input type="checkbox" id="${task.id}" class="task-checkbox" ${isChecked ? 'checked' : ''}> <div> <label for="${task.id}" class="task-label">${task.label} <span class="text-xs text-slate-500 font-normal">(${task.time})</span></label> <p class="task-desc">${task.desc}</p> </div> </div> `; });
+                phaseCard.innerHTML = ` <h3 class="text-xl font-semibold mb-2">${phase.title}</h3> <div class="progress-bar-bg mb-4"> <div id="progress-${phase.id}" class="progress-bar-fg" style="width: 0%;"></div> </div> ${taskHTML} `;
+                phasesContainer.appendChild(phaseCard);
+            });
+            addEventListeners();
+            updateProgress();
+        }
+
+        function addEventListeners() {
+            document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', async (e) => { 
+                    taskState[e.target.id] = e.target.checked; 
+                    await saveData(); 
+                    updateProgress(); 
+                });
+            });
+        }
+
+        function updateProgress() {
+            let totalTasks = 0; let completedTasks = 0;
+            projectPhases.forEach(phase => {
+                let phaseTotal = phase.tasks.length; let phaseCompleted = 0;
+                phase.tasks.forEach(task => { totalTasks++; if (taskState[task.id]) { phaseCompleted++; completedTasks++; } });
+                const phaseProgress = phaseTotal > 0 ? (phaseCompleted / phaseTotal) * 100 : 0;
+                const progressBar = document.getElementById(`progress-${phase.id}`);
+                if (progressBar) {
+                    progressBar.style.width = `${phaseProgress}%`;
+                }
+            });
+            const overallProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+            overallProgressBar.style.width = `${overallProgress.toFixed(0)}%`;
+            overallProgressText.textContent = `${overallProgress.toFixed(0)}% Complete`;
+        }
+        
+        function showFatalError(message) {
+             authSection.classList.add('hidden');
+             mainContent.classList.add('hidden');
+             fatalErrorSection.style.display = 'block';
+             fatalErrorMessage.innerHTML = `<p>${message}</p>`;
+        }
+
+        async function loadDataAndRender(db) {
+            try {
+                const docSnap = await getDoc(trackerDocRef);
+                if (docSnap.exists()) {
+                    taskState = docSnap.data();
+                } else {
+                    await setDoc(trackerDocRef, {});
+                    taskState = {};
+                }
+                authSection.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                renderUI();
+            } catch(error) {
+                console.error("Firestore Load Error:", error);
+                showFatalError(`A critical error occurred while loading your data: ${error.message}. Please check your Firestore security rules and refresh the page.`);
+            }
+        }
+
+        async function saveData() {
+            if (!trackerDocRef) return;
+             try {
+                await setDoc(trackerDocRef, taskState, { merge: true });
+            } catch (error) {
+                console.error("Firestore Save Error:", error);
+                alert(`Could not save your progress: ${error.message}`);
+            }
+        }
+        
+        // --- Main Execution ---
+        let firebaseConfig;
+        try {
+            // ==================================================================
+            // ACTION REQUIRED: PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
+            // (Get it from: Firebase Console > Project Settings > Your Apps > Config)
+            // ==================================================================
+            firebaseConfig = {
+              apiKey: "PASTE_YOUR_API_KEY_HERE",
+              authDomain: "PASTE_YOUR_AUTH_DOMAIN_HERE",
+              projectId: "project-aergia-core-platform",
+              storageBucket: "PASTE_YOUR_STORAGE_BUCKET_HERE",
+              messagingSenderId: "PASTE_YOUR_SENDER_ID_HERE",
+              appId: "PASTE_YOUR_APP_ID_HERE"
+            };
+            // ==================================================================
+
+            if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("PASTE_")) {
+                 throw new Error("ACTION REQUIRED: Firebase configuration is missing. Please open this HTML file in a text editor, find the firebaseConfig object, and paste your actual configuration details from the Firebase Console.");
+            }
+
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    userId = user.uid;
+                    trackerDocRef = doc(db, "projectAergiaTracker", userId);
+                    const welcomeName = user.displayName || 'User';
+                    welcomeMessage.textContent = `Welcome back, ${welcomeName}. Let's get to work.`;
+                    loadDataAndRender(db);
+                } else {
+                    authSection.classList.remove('hidden');
+                    mainContent.classList.add('hidden');
+                    welcomeMessage.textContent = `Your persistent, cloud-synced guide to success.`;
+                    authButton.textContent = 'Sign In with Google';
+                    authButton.disabled = false;
+                }
+            });
+            
+            authButton.addEventListener('click', () => {
+                const provider = new GoogleAuthProvider();
+                signInWithPopup(auth, provider).catch(error => { 
+                    console.error("Authentication Error: ", error); 
+                    alert("Could not sign in. Please check the console for errors."); 
+                });
+            });
+
+        } catch (error) {
+            console.error("Initialization failed:", error);
+            showFatalError(error.message);
+        }
+
+    </script>
+</body>
+</html>

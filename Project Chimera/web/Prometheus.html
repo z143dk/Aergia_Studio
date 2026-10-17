@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Prometheus: Content Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .workbook-section {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+        }
+        .task-item {
+            display: flex;
+            align-items: start;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        .task-checkbox {
+            margin-top: 5px;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            accent-color: #4f46e5;
+        }
+        .code-block {
+            background-color: #1f2937;
+            color: #d1d5db;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .sticky-top {
+            position: sticky;
+            top: 1.5rem;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-6 max-w-7xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Project Prometheus: Content Engine</h1>
+            <p class="text-lg text-gray-600 mt-2">Welcome, Daniel Austin. This is your A-Z activation blueprint and command center.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column: The Workbook -->
+            <div class="lg:col-span-1">
+                <h2 class="text-2xl font-bold mb-4">Activation Workbook</h2>
+
+                <!-- Phase 0: Foundation & Financials -->
+                <div class="workbook-section">
+                    <h3 class="text-xl font-semibold mb-3">Phase 0: Foundation & Financials</h3>
+                    <div class="task-item">
+                        <input type="checkbox" class="task-checkbox">
+                        <label><strong>Set Google Cloud Budget Alert:</strong> Go to Billing > Budgets & alerts > Create budget. Set a monthly amount (e.g., $50) for project <code>project-aergia-core-platform</code> to prevent surprises. Your credits are used first.</label>
+                    </div>
+                    <div class="task-item">
+                        <input type="checkbox" class="task-checkbox">
+                        <label><strong>Acquire Software (Student Discounts):</strong><br>
+                            - <strong>Video Editor:</strong> Get the Adobe Creative Cloud student plan or use the free desktop version of CapCut.<br>
+                            - <strong>Voice & Music:</strong> Start with the free YouTube Audio Library and the free tier of ElevenLabs.
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Phase 1: Core Tech Setup -->
+                <div class="workbook-section">
+                    <h3 class="text-xl font-semibold mb-3">Phase 1: Core Tech Setup</h3>
+                    <div class="task-item">
+                        <input type="checkbox" class="task-checkbox">
+                        <label><strong>Configure gcloud CLI:</strong> Authenticate with `gcloud auth login`. Then, run these commands in your terminal:</label>
+                    </div>
+                    <div class="code-block my-2">
+                        gcloud config set project project-aergia-core-platform<br>
+                        gcloud services enable vertexai.googleapis.com cloudai.googleapis.com
+                    </div>
+                     <div class="task-item">
+                        <input type="checkbox" class="task-checkbox">
+                        <label><strong>Configure VS Code:</strong> Install the "Google Cloud Code" extension and log in, selecting `project-aergia-core-platform` when prompted.</label>
+                    </div>
+                </div>
+
+                 <!-- App Setup (Phase 2) -->
+                <div id="app-setup-section" class="workbook-section">
+                    <h3 class="text-xl font-semibold mb-3">Phase 2: Enable The App</h3>
+                     <div class="task-item">
+                        <input type="checkbox" id="oauth-setup-checkbox" class="task-checkbox">
+                        <div>
+                            <strong>CRITICAL: Create OAuth 2.0 Client ID:</strong> This app needs your permission to talk to Google Cloud.
+                            <ol class="list-decimal list-inside mt-2 space-y-1">
+                                <li>Go to the <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="text-indigo-600 hover:underline">Credentials page</a> in your Google Cloud project.</li>
+                                <li>Click "+ CREATE CREDENTIALS" and select "OAuth client ID".</li>
+                                <li>For "Application type", select "Web application".</li>
+                                <li>Give it a name, like "Prometheus App Client".</li>
+                                <li>Under "Authorized JavaScript origins", click "+ ADD URI" and enter `http://localhost:8000` (or the address you run this from).</li>
+                                 <li>Under "Authorized redirect URIs", click "+ ADD URI" and enter `http://localhost:8000`.</li>
+                                <li>Click "CREATE". Copy the "Client ID" you receive.</li>
+                            </ol>
+                        </div>
+                    </div>
+                     <div class="task-item">
+                        <input type="checkbox" id="client-id-pasted-checkbox" class="task-checkbox">
+                        <label for="client-id-input"><strong>Paste your Client ID below:</strong></label>
+                    </div>
+                    <input type="text" id="client-id-input" placeholder="Paste your OAuth Client ID here" class="w-full mt-2 p-2 border rounded-md">
+                </div>
+
+            </div>
+
+            <!-- Right Column: The App -->
+            <div class="lg:col-span-1">
+                <div class="sticky-top">
+                    <div id="prometheus-app" class="workbook-section">
+                        <h2 class="text-2xl font-bold mb-4 text-center">Prometheus Content Engine</h2>
+
+                        <!-- Auth Button -->
+                        <div id="auth-container" class="text-center mb-4">
+                            <p id="auth-message" class="text-gray-600 mb-2">Click below to connect the app to your Google Account.</p>
+                            <button id="auth-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition w-full">Sign In with Google</button>
+                        </div>
+
+                        <!-- Video Generation Form -->
+                        <div id="generator-container" class="hidden">
+                            <h3 class="text-lg font-semibold mb-2">1. Generate Video Clip</h3>
+                            <textarea id="prompt-input" rows="8" class="w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500" placeholder="A cinematic, vlog-style shot of Bigfoot..."></textarea>
+                            <button id="generate-button" class="bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition w-full mt-3">Generate Video</button>
+
+                            <!-- Results Area -->
+                            <div id="result-area" class="mt-6 text-center">
+                                <div id="spinner" class="hidden">
+                                    <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <p class="mt-2 text-gray-600">Generating video... this may take a few minutes.</p>
+                                </div>
+                                <div id="video-container" class="hidden">
+                                     <video id="result-video" class="w-full rounded-lg shadow-lg" controls></video>
+                                     <a id="download-link" class="inline-block bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-green-700 transition mt-4">Download Video Clip</a>
+                                </div>
+                                 <div id="error-message" class="hidden p-4 bg-red-100 text-red-700 rounded-lg"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const PROJECT_ID = 'project-aergia-core-platform';
+        const LOCATION = 'us-central1';
+        let CLIENT_ID = ''; // To be filled by user
+        const SCOPES = 'https://www.googleapis.com/auth/cloud-platform';
+
+        // --- DOM Elements ---
+        const clientIdInput = document.getElementById('client-id-input');
+        const authButton = document.getElementById('auth-button');
+        const generateButton = document.getElementById('generate-button');
+        const authContainer = document.getElementById('auth-container');
+        const generatorContainer = document.getElementById('generator-container');
+        const promptInput = document.getElementById('prompt-input');
+        const spinner = document.getElementById('spinner');
+        const videoContainer = document.getElementById('video-container');
+        const resultVideo = document.getElementById('result-video');
+        const downloadLink = document.getElementById('download-link');
+        const errorMessage = document.getElementById('error-message');
+        const authMessage = document.getElementById('auth-message');
+
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+
+        // --- Load Google APIs ---
+        function initializeGis() {
+            CLIENT_ID = clientIdInput.value;
+            if (!CLIENT_ID) {
+                alert('Please paste your OAuth Client ID in Phase 2.');
+                return;
+            }
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // defined later
+            });
+            gisInited = true;
+            authButton.disabled = false;
+            authMessage.textContent = 'Ready to connect. Click below to sign in.';
+        }
+
+        gapi.load('client', async () => {
+            await gapi.client.init({
+                // NOTE: In a real app, you'd dynamically load the discovery doc.
+                // For simplicity here, we assume the structure of the Vertex AI API.
+            });
+            gapiInited = true;
+        });
+
+        // --- Event Listeners ---
+        clientIdInput.addEventListener('change', () => {
+           if(clientIdInput.value) {
+               initializeGis();
+           }
+        });
+
+        authButton.addEventListener('click', () => {
+            if (!gisInited) {
+                 alert('Please paste your Client ID first.');
+                return;
+            }
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    throw (resp);
+                }
+                // Successful auth
+                authContainer.classList.add('hidden');
+                generatorContainer.classList.remove('hidden');
+            };
+
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({prompt: 'consent'});
+            } else {
+                 tokenClient.requestAccessToken({prompt: ''});
+            }
+        });
+
+        generateButton.addEventListener('click', async () => {
+            const prompt = promptInput.value;
+            if (!prompt) {
+                alert('Please enter a video prompt.');
+                return;
+            }
+
+            // Reset UI
+            spinner.classList.remove('hidden');
+            videoContainer.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            generateButton.disabled = true;
+
+            const accessToken = gapi.client.getToken().access_token;
+            const apiUrl = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/gemini-1.5-pro-preview-0409:generateContent`;
+
+            const requestBody = {
+                "contents": {
+                    "role": "USER",
+                    "parts": [{ "text": prompt }]
+                },
+                 "generation_config": {
+                    "mime_type": "video/mp4"
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API Error: ${errorData.error.message}`);
+                }
+
+                const data = await response.json();
+
+                if (data.candidates && data.candidates[0].content.parts[0].blob) {
+                    const videoData = data.candidates[0].content.parts[0].blob.data;
+                    const videoSrc = `data:video/mp4;base64,${videoData}`;
+                    
+                    resultVideo.src = videoSrc;
+                    downloadLink.href = videoSrc;
+                    downloadLink.download = `prometheus_clip_${Date.now()}.mp4`;
+
+                    videoContainer.classList.remove('hidden');
+                } else {
+                    throw new Error('No video data received from API. The model may have refused the prompt.');
+                }
+
+            } catch (error) {
+                errorMessage.textContent = `Error: ${error.message}`;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                spinner.classList.add('hidden');
+                generateButton.disabled = false;
+            }
+        });
+
+    </script>
+    <script async defer src="https://accounts.google.com/gsi/client"></script>
+
+</body>
+</html>

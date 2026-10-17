@@ -1,0 +1,27 @@
+{
+  "relics": {
+    "excalibur": {
+      "name": "Excalibur",
+      "era": "5th Century",
+      "location": "Glastonbury Tor, England",
+      "coords": {"lat": 51.146, "lon": -2.699},
+      "lore": "Legend places the legendary blade of King Arthur within the marshy wetlands of Somerset, ancient Avalon.",
+      "required_tools": ["ancient_compass"]
+    },
+    "apple_of_eden": {
+      "name": "The Apple of Eden",
+      "era": "1492 AD",
+      "location": "Vatican Vaults, Rome",
+      "coords": {"lat": 41.902, "lon": 12.453},
+      "lore": "An ancient, golden sphere capable of manipulating human free will, hidden during the height of the Borgia Papacy.",
+      "required_tools": ["spyglass_of_antiquity"]
+    }
+  },
+  "crafting_recipes": [
+    {
+      "result": "spyglass_of_antiquity",
+      "ingredients": ["venetian_glass", "quartz_lens"],
+      "description": "Reveals hidden timeline anomalies from farther away."
+    }
+  ]
+}

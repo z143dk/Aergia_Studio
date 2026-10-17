@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aergia Studio Mobile</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Aergia">
+    <link rel="apple-touch-icon"
+        href="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1200px-Python-logo-notext.svg.png">
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .btn {
+            background: #007AFF;
+            color: white;
+            padding: 20px 40px;
+            font-size: 20px;
+            border-radius: 15px;
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            opacity: 0.8;
+            max-width: 300px;
+            line-height: 1.5;
+        }
+    </style>
+    <script>
+        // Auto-redirect after 3 seconds if on iOS
+        setTimeout(() => {
+            window.location.href = "http://100.75.65.95:5050";
+        }, 3000);
+    </script>
+</head>
+
+<body>
+    <h1>🚀 Launching Aergia</h1>
+    <p>Connecting to Mac Studio via Tailscale<br>(100.75.65.95:5050)</p>
+
+    <a href="http://100.75.65.95:5050" class="btn">Open Dashboard Now</a>
+
+    <p style="margin-top: 40px; font-size: 14px; color: #555;">
+        Tap "Share" -> "Add to Home Screen" to install as an App.
+    </p>
+</body>
+
+</html>

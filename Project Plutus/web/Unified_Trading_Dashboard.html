@@ -1,0 +1,493 @@
+!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Aergia - Unified Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'gray-900': '#121212',
+                        'gray-800': '#1e1e1e',
+                        'gray-700': '#2d2d2d',
+                        'gray-600': '#4a4a4a',
+                        'gray-400': '#9a9a9a',
+                        'gray-200': '#e5e5e5',
+                        'cyan-500': '#06b6d4',
+                        'cyan-600': '#0891b2',
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .card { transition: all 0.3s ease-in-out; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px -3px rgba(6, 182, 212, 0.1), 0 4px 6px -2px rgba(6, 182, 212, 0.05); }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .spinner { border: 2px solid #2d2d2d; border-top: 2px solid #06b6d4; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.online { background-color: #10b981; box-shadow: 0 0 5px #10b981; }
+        .status-dot.degraded { background-color: #f59e0b; box-shadow: 0 0 5px #f59e0b;}
+        .status-dot.offline { background-color: #ef4444; box-shadow: 0 0 5px #ef4444;}
+        .wizard-step-card {
+             background-color: rgba(45, 45, 45, 0.5);
+        }
+        .wizard-step-card code { background-color: #121212; }
+        .details-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        textarea.code-editor {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e1e1e;
+            border-color: #4a4a4a;
+            color: #e5e5e5;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans">
+    <div id="app" class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center sticky top-0 z-20">
+            <div class="flex items-center space-x-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-500"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+                <h1 class="text-xl font-bold">Project Aergia</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="live-time" class="text-sm text-gray-400"></span>
+                <span class="text-sm text-gray-400 hidden sm:inline">|</span>
+                <span class="text-sm text-gray-400 hidden sm:inline">Daniel Austin</span>
+                <img class="h-8 w-8 rounded-full" src="https://placehold.co/100x100/1e1e1e/e5e5e5?text=DA" alt="User Avatar">
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-6 lg:p-8">
+            <div class="max-w-7xl mx-auto space-y-8">
+                
+                <!-- System Node Status -->
+                <div class="card bg-gray-800 p-6 rounded-lg border border-gray-700 fade-in">
+                    <h2 class="text-lg font-semibold mb-4">AI Control Hub: System Node Status</h2>
+                    <div id="system-status-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                    </div>
+                </div>
+                
+                <!-- Live Code Editor & AI Troubleshooter -->
+                <div class="card bg-gray-800 p-6 rounded-lg border border-gray-700 fade-in" style="animation-delay: 0.1s;">
+                    <h2 class="text-lg font-semibold mb-4">Live Code Editor & AI Troubleshooter</h2>
+                    <p class="text-sm text-gray-400 mb-4">Enter HTML, CSS, or JavaScript below to modify this page. Use the AI Troubleshooter to check your code before applying it live.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="html-editor" class="block text-sm font-medium text-gray-300 mb-1">HTML</label>
+                            <textarea id="html-editor" rows="8" class="code-editor w-full p-2 rounded-md" placeholder="<!-- Your HTML goes here -->"></textarea>
+                        </div>
+                        <div>
+                            <label for="css-editor" class="block text-sm font-medium text-gray-300 mb-1">CSS</label>
+                            <textarea id="css-editor" rows="8" class="code-editor w-full p-2 rounded-md" placeholder="/* Your CSS goes here */"></textarea>
+                        </div>
+                        <div>
+                            <label for="js-editor" class="block text-sm font-medium text-gray-300 mb-1">JavaScript</label>
+                            <textarea id="js-editor" rows="8" class="code-editor w-full p-2 rounded-md" placeholder="// Your JavaScript goes here"></textarea>
+                        </div>
+                    </div>
+                    <div id="html-injection-target" class="my-4 p-4 border border-dashed border-gray-600 rounded-md min-h-[50px] text-center text-gray-500">
+                        Your new HTML will appear here when applied.
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 mt-4">
+                        <button id="troubleshoot-btn" class="w-full sm:w-1/2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center">
+                             <span id="troubleshoot-btn-text">Troubleshoot with Gemini</span>
+                             <div id="troubleshoot-spinner" class="spinner hidden ml-2"></div>
+                        </button>
+                        <button id="apply-code-btn" class="w-full sm:w-1/2 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Apply Live Changes</button>
+                    </div>
+                    <div id="troubleshoot-response" class="mt-4 p-4 bg-gray-700/50 rounded-md text-gray-300 hidden"></div>
+                </div>
+
+
+                <!-- Setup Wizard Section -->
+                <div class="card bg-gray-800 p-6 rounded-lg border border-gray-700 fade-in" style="animation-delay: 0.2s;">
+                    <h2 class="text-lg font-semibold mb-4">Project Aergia Setup Wizard</h2>
+                     <div class="space-y-4" id="wizard-steps-container">
+                    </div>
+                </div>
+
+                <!-- Portfolio Overview -->
+                <div class="card bg-gray-800 p-6 rounded-lg border border-gray-700 fade-in" style="animation-delay: 0.3s;">
+                    <h2 class="text-lg font-semibold mb-4">AI Trading Dashboard: Portfolio</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div><p class="text-sm text-gray-400">Total Value</p><p class="text-2xl font-bold">$52,148.75</p></div>
+                        <div><p class="text-sm text-gray-400">Day P&L</p><p class="text-2xl font-bold text-green-500">+$1,234.10 (+2.42%)</p></div>
+                        <div><p class="text-sm text-gray-400">Buying Power</p><p class="text-2xl font-bold">$28,910.50</p></div>
+                        <div><p class="text-sm text-gray-400">Sharpe Ratio (30d)</p><p class="text-2xl font-bold">1.82</p></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Active Trades Table -->
+                    <div class="bg-gray-800 rounded-lg border border-gray-700 fade-in" style="animation-delay: 0.4s;">
+                         <div class="p-4 border-b border-gray-700">
+                            <h2 class="text-lg font-semibold">Active Trades & Positions</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-700/50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">Asset</th><th scope="col" class="px-6 py-3">Type</th><th scope="col" class="px-6 py-3">P&L</th><th scope="col" class="px-6 py-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trades-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Watchlist -->
+                    <div class="bg-gray-800 rounded-lg border border-gray-700 fade-in" style="animation-delay: 0.4s;">
+                        <div class="p-4 border-b border-gray-700">
+                           <h2 class="text-lg font-semibold">Market Watchlist</h2>
+                       </div>
+                       <div id="watchlist-body" class="p-4 space-y-2 max-h-[250px] overflow-y-auto">
+                           <!-- Watchlist items will be populated here -->
+                       </div>
+                       <div class="p-4 border-t border-gray-700">
+                           <form id="add-watchlist-form" class="flex space-x-2">
+                               <input id="watchlist-ticker-input" type="text" class="flex-grow bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="Add ticker (e.g., META)">
+                               <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-3 rounded-md transition-colors duration-200">+</button>
+                           </form>
+                       </div>
+                    </div>
+                </div>
+                
+                <!-- Sentiment Monitor -->
+                 <div class="card bg-gray-800 p-6 rounded-lg border border-gray-700 fade-in" style="animation-delay: 0.5s;">
+                    <h2 class="text-xl font-semibold mb-4">Live Sentiment Monitor</h2>
+                    <div id="sentiment-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="trade-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl border border-gray-700 max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-semibold">Trade Details</h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div id="modal-content" class="p-6 overflow-y-auto"></div>
+        </div>
+    </div>
+    
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- UTILITY FUNCTIONS ---
+    function formatCurrency(value, showSign = false) {
+        if (typeof value !== 'number') return value;
+        const sign = showSign && value > 0 ? '+' : '';
+        return sign + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    }
+    const timeEl = document.getElementById('live-time');
+    function updateClock() {
+        if(timeEl) timeEl.textContent = new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute:'2-digit', second:'2-digit', timeZoneName: 'short' });
+    }
+
+    // --- MOCK DATA ---
+    const mockTrades = [
+        { id: 't001', ticker: 'NVDA', type: 'Equity', entryPrice: 950.25, currentPrice: 985.50, status: 'Active', pnl: 3525.00, size: 100, rationale: "Strong bullish momentum detected. Positive sector sentiment from Gemini Analysis Node. Forecast indicates potential for +5% upside this week. Stop-loss set at 940 based on 1.5x ATR." },
+        { id: 't002', ticker: 'SPY', type: 'Call Spread', entryPrice: 2.50, currentPrice: 3.10, status: 'Active', pnl: 600.00, size: 10, rationale: "Market regime is 'Bullish Calm'. Executing a Bull Call Spread to capitalize on expected low-volatility upward drift. Defined risk profile fits current capital allocation rules." },
+        { id: 't003', ticker: 'BTC-USD', type: 'Crypto Spot', entryPrice: 68500, currentPrice: 69100, status: 'Active', pnl: 300.00, size: 0.5, rationale: "High-frequency scalping signal. Detected order book imbalance on Coinbase Advanced Trade. Aiming for a short-term 1% gain with a tight trailing stop." },
+        { id: 't004', ticker: '/ES', type: 'Futures', entryPrice: 5300.00, currentPrice: 5315.50, status: 'Active', pnl: 775.00, size: 1, rationale: "Macro signal based on CPI data. Gemini analysis suggested lower-than-expected inflation, prompting a long position on S&P 500 futures via IBKR." },
+        { id: 't005', ticker: 'EUR/USD', type: 'Forex', entryPrice: 1.0850, currentPrice: 1.0825, status: 'Active', pnl: -250.00, size: 100000, rationale: "Short position initiated on a technical breakdown below key support. Risk is managed with a tight stop-loss at 1.0870." },
+    ];
+    
+    let mockWatchlist = [
+        { id: 'w001', ticker: 'AMD' },
+        { id: 'w002', ticker: 'COIN' },
+        { id: 'w003', ticker: 'PLTR' },
+        { id: 'w004', ticker: '/GC' }, // Gold Futures
+    ];
+
+    const sentimentData = [
+        { ticker: 'TSLA', sentiment: 0.65, sources: ['stocktwits', 'reddit'], type: 'Equity' },
+        { ticker: 'GME', sentiment: -0.40, sources: ['reddit', 'yahoo'], type: 'Equity' },
+        { ticker: 'AAPL', sentiment: 0.30, sources: ['yahoo'], type: 'Equity' },
+        { ticker: 'NVDA', sentiment: 0.85, sources: ['stocktwits', 'reddit', 'yahoo'], type: 'Equity' },
+        { ticker: 'SPY', sentiment: 0.15, sources: ['yahoo'], type: 'ETF' },
+        { ticker: 'EUR/USD', sentiment: -0.20, sources: ['yahoo'], type: 'Forex' },
+        { ticker: '/CL', sentiment: 0.35, sources: ['yahoo'], type: 'Futures' },
+    ];
+    
+    const systemNodes = [
+        { name: 'Data Ingestion', status: 'online', info: 'Connected to IBKR, Coinbase' },
+        { name: 'Signal Generation', status: 'online', info: '7 active models' },
+        { name: 'Risk Management', status: 'online', info: 'Global stop-loss active' },
+        { name: 'Order Execution', status: 'degraded', info: 'Schwab API latency high' },
+        { name: 'Gemini LLM Node', status: 'online', info: 'Ready for analysis' },
+        { name: 'n8n Orchestrator', status: 'online', info: 'Running daily jobs' },
+    ];
+    
+    const wizardSteps = [
+        { title: 'Foundational Setup', steps: [{ name: 'Create GCP Project', details: 'Navigate to the Google Cloud Console and create a new project named <strong>Project-Aergia</strong>. This will be the home for all your cloud services.' },{ name: 'Enable Billing & Set Budget', details: 'Link a billing account to your project. CRITICAL: Go to the "Billing" -> "Budgets & alerts" section and create a monthly budget (e.g., $50) with alerts at 50%, 90%, and 100%. This is your financial safety net.' },{ name: 'Enable Required Cloud APIs', details: 'Use the one-click link below to enable all necessary services for Project Aergia. You must be logged into your Google account. <br/><a href="https://console.cloud.google.com/flows/enableapi?apiid=iam.googleapis.com,secretmanager.googleapis.com,firestore.googleapis.com,cloudfunctions.googleapis.com,run.googleapis.com,cloudbuild.googleapis.com,firebase.googleapis.com,aiplatform.googleapis.com,hosting.googleapis.com" target="_blank" class="inline-block mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">Enable All APIs</a>' }] },
+        { title: 'Backend Infrastructure Setup', steps: [{ name: 'Create Pub/Sub Topics', details: 'Go to the Pub/Sub section in your GCP console. Create a topic named <code>market-data-raw</code>. This will act as the message bus for your Data Ingestion Node.' },{ name: 'Create Storage Bucket', details: 'Go to Cloud Storage. Create a new bucket with a unique name (e.g., <code>project-aergia-raw-data-storage</code>). This is where raw market data will be archived for later analysis.' },{ name: 'Set Up Secret Manager', details: 'Go to Secret Manager under "Security". Create secrets for each of your broker API keys (e.g., <code>interactive-brokers-api-key</code>, <code>coinbase-api-secret</code>). This keeps your keys secure and out of your code.' }] },
+    ];
+
+    // --- RENDERING FUNCTIONS ---
+    function renderComponent(containerId, renderFunc) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            renderFunc(container);
+        }
+    }
+
+    renderComponent('system-status-grid', (container) => {
+        container.innerHTML = '';
+        systemNodes.forEach(node => {
+            const card = document.createElement('div');
+            card.className = 'bg-gray-700/50 p-3 rounded-lg flex items-center space-x-3';
+            card.innerHTML = `<span class="status-dot ${node.status}"></span><div><p class="font-semibold">${node.name}</p><p class="text-xs text-gray-400">${node.info}</p></div>`;
+            container.appendChild(card);
+        });
+    });
+
+    renderComponent('wizard-steps-container', (container) => {
+        const wizardGeminiSection = `<div class="wizard-step-card bg-cyan-900/30 p-6 rounded-lg border border-cyan-500/50 mb-6"><h3 class="text-xl font-semibold mb-3 text-cyan-400">Need Help? Ask the Gemini Assistant</h3><p class="mb-4 text-gray-300">Confused about a term like "API" or "Firebase"? Type your question below to get a simple explanation.</p><div class="flex space-x-2"><input id="wizard-gemini-prompt" type="text" class="flex-grow bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="e.g., What is an API key?"><button id="wizard-ask-gemini-btn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center min-w-[80px]"><span id="wizard-gemini-btn-text">Ask</span><div id="wizard-gemini-spinner" class="spinner hidden"></div></button></div><div id="wizard-gemini-response" class="mt-4 p-4 bg-gray-700/50 rounded-md text-gray-300 hidden"></div></div>`;
+        container.innerHTML = wizardGeminiSection;
+        wizardSteps.forEach(section => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'wizard-step-card bg-gray-800/50 p-4 rounded-lg border border-gray-700/50 mt-4';
+            let stepsHTML = section.steps.map((step) => `<div class="border-b border-gray-700 last:border-b-0 py-3"><button class="w-full text-left flex justify-between items-center wizard-step-toggle"><span class="font-semibold text-gray-200">${step.name}</span><svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button><div class="details-content mt-2 pl-4 text-gray-300 text-sm"><p>${step.details}</p></div></div>`).join('');
+            sectionDiv.innerHTML = `<h3 class="text-xl font-semibold mb-3 text-cyan-500">${section.title}</h3>${stepsHTML}`;
+            container.appendChild(sectionDiv);
+        });
+        container.addEventListener('click', e => {
+            const toggle = e.target.closest('.wizard-step-toggle');
+            if (toggle) {
+                const details = toggle.nextElementSibling;
+                const icon = toggle.querySelector('svg');
+                if (details.style.maxHeight && details.style.maxHeight !== '0px') {
+                    details.style.maxHeight = '0px';
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    details.style.maxHeight = details.scrollHeight + 'px';
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            }
+        });
+    });
+
+    renderComponent('trades-table-body', (container) => {
+        container.innerHTML = '';
+        mockTrades.forEach(trade => {
+            const row = document.createElement('tr');
+            row.className = 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50 transition-colors duration-200';
+            const pnlClass = trade.pnl >= 0 ? 'text-green-500' : 'text-red-500';
+            row.innerHTML = `<td class="px-6 py-4 font-medium whitespace-nowrap">${trade.ticker}</td><td class="px-6 py-4">${trade.type}</td><td class="px-6 py-4 font-medium ${pnlClass}">${formatCurrency(trade.pnl, true)}</td><td class="px-6 py-4"><button data-trade-id="${trade.id}" class="view-rationale-btn text-cyan-500 hover:text-cyan-400 font-medium">View</button></td>`;
+            container.appendChild(row);
+        });
+    });
+    
+    function renderSentiment() {
+        const sentimentGrid = document.getElementById('sentiment-grid');
+        if (!sentimentGrid) return;
+        sentimentGrid.innerHTML = '';
+        sentimentData.forEach(stock => {
+            stock.sentiment += (Math.random() - 0.5) * 0.05;
+            stock.sentiment = Math.max(-1, Math.min(1, stock.sentiment));
+            const sentimentClass = stock.sentiment > 0.5 ? 'text-green-400' : stock.sentiment > 0.1 ? 'text-green-500' : stock.sentiment < -0.5 ? 'text-red-400' : stock.sentiment < -0.1 ? 'text-red-500' : 'text-gray-400';
+            const trendIcon = stock.sentiment > 0.1 ? '▲' : stock.sentiment < -0.1 ? '▼' : '▬';
+            const card = document.createElement('div');
+            card.className = 'bg-gray-700/50 p-4 rounded-lg flex flex-col justify-between';
+            card.innerHTML = `<div><p class="font-bold text-lg">${stock.ticker}</p><p class="text-3xl font-bold ${sentimentClass}">${trendIcon} ${Math.abs(stock.sentiment).toFixed(2)}</p></div><div class="flex items-center space-x-2 mt-3"><span class="text-xs text-gray-500">Sources:</span> ${stock.sources.includes('stocktwits') ? '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_k5a-Y9V5-i5o7g-L2gZk3jZ5E3fP-5l6w&s" class="h-4 w-4 rounded-full" title="StockTwits">' : ''} ${stock.sources.includes('reddit') ? '<img src="https://www.redditinc.com/assets/images/site/reddit-logo.png" class="h-4 w-4 rounded-full bg-white" title="Reddit">' : ''} ${stock.sources.includes('yahoo') ? '<img src="https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png" class="h-4 w-4 rounded-full" title="Yahoo Finance">' : ''}</div>`;
+            sentimentGrid.appendChild(card);
+        });
+    }
+    renderSentiment();
+    setInterval(renderSentiment, 5000);
+
+    // --- LIVE CODE EDITOR ---
+    const applyCodeBtn = document.getElementById('apply-code-btn');
+    if (applyCodeBtn) {
+        applyCodeBtn.addEventListener('click', () => {
+            const htmlCode = document.getElementById('html-editor').value;
+            const cssCode = document.getElementById('css-editor').value;
+            const jsCode = document.getElementById('js-editor').value;
+            const styleTag = document.createElement('style');
+            styleTag.textContent = cssCode;
+            document.head.appendChild(styleTag);
+            document.getElementById('html-injection-target').innerHTML = htmlCode;
+            try { eval(jsCode); } catch (e) {
+                console.error("Error executing user JS:", e);
+                document.getElementById('html-injection-target').innerHTML = `<p class="text-red-400">JavaScript Error: ${e.message}</p>`;
+            }
+        });
+    }
+
+    const troubleshootBtn = document.getElementById('troubleshoot-btn');
+    if(troubleshootBtn) {
+        troubleshootBtn.addEventListener('click', () => {
+            const htmlCode = document.getElementById('html-editor').value;
+            const cssCode = document.getElementById('css-editor').value;
+            const jsCode = document.getElementById('js-editor').value;
+            const prompt = `Please act as a senior web developer. I have the following code snippets. Check them for errors, suggest improvements for clarity and performance, and confirm if they will work together. HTML: \`\`\`html ${htmlCode} \`\`\` CSS: \`\`\`css ${cssCode} \`\`\` JavaScript: \`\`\`javascript ${jsCode} \`\`\` Provide a concise analysis in markdown format.`;
+            callGeminiAPI(prompt, 'troubleshoot-btn-text', 'troubleshoot-spinner', 'troubleshoot-response');
+        });
+    }
+
+    // --- GENERIC GEMINI API CALLER ---
+    async function callGeminiAPI(prompt, btnTextId, spinnerId, responseAreaId, onComplete) {
+        const btnText = document.getElementById(btnTextId);
+        const spinner = document.getElementById(spinnerId);
+        const responseArea = document.getElementById(responseAreaId);
+        if (btnText) btnText.classList.add('hidden');
+        if (spinner) spinner.classList.remove('hidden');
+        if (responseArea) {
+            responseArea.classList.add('hidden');
+            responseArea.innerHTML = '';
+        }
+        
+        let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        
+        try {
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+            const result = await response.json();
+            let text = 'Sorry, I could not retrieve an explanation at this time.';
+            if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0]) { text = result.candidates[0].content.parts[0].text; }
+            if (onComplete) {
+                onComplete(text);
+            } else if (responseArea) {
+                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                responseArea.innerHTML = text;
+                responseArea.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error("Gemini API call failed:", error);
+            if (responseArea) {
+                responseArea.innerHTML = `<p class="text-red-400">Error: Could not retrieve analysis. Check browser console.</p>`;
+                responseArea.classList.remove('hidden');
+            }
+        } finally {
+            if (btnText) btnText.classList.remove('hidden');
+            if (spinner) spinner.classList.add('hidden');
+        }
+    }
+    
+    // --- MODAL & WATCHLIST ---
+    const modal = document.getElementById('trade-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    if (document.body) {
+        document.body.addEventListener('click', e => {
+            const rationaleBtn = e.target.closest('.view-rationale-btn');
+            if (rationaleBtn) {
+                const tradeId = rationaleBtn.getAttribute('data-trade-id');
+                const trade = mockTrades.find(t => t.id === tradeId);
+                if (trade) openTradeModal(trade);
+            }
+            
+            const insightBtn = e.target.closest('.gemini-insight-btn');
+            if(insightBtn) {
+                 const ticker = insightBtn.getAttribute('data-ticker');
+                 openGeminiInsightModal(ticker);
+            }
+        });
+    }
+    if(closeModalBtn) closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    if(modal) modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+
+    function openTradeModal(trade) {
+        const modalTitle = document.getElementById('modal-title');
+        const modalContent = document.getElementById('modal-content');
+        modalTitle.textContent = `Details for ${trade.ticker}`;
+        modalContent.innerHTML = `<div class="space-y-4"><div><h4 class="font-semibold text-gray-400 text-sm mb-1">AI Rationale (from Gemini)</h4><p class="bg-gray-700/50 p-3 rounded-md text-gray-200">${trade.rationale}</p></div><div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700"><div><p class="text-xs text-gray-400">Position Size</p><p class="font-medium">${trade.size}</p></div><div><p class="text-xs text-gray-400">Asset Type</p><p class="font-medium">${trade.type}</p></div><div><p class="text-xs text-gray-400">Entry Price</p><p class="font-medium">${formatCurrency(trade.entryPrice)}</p></div><div><p class="text-xs text-gray-400">Current P&L</p><p class="font-medium ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}">${formatCurrency(trade.pnl, true)}</p></div></div></div>`;
+        modal.classList.remove('hidden');
+    }
+
+    function openGeminiInsightModal(ticker) {
+        const modalTitle = document.getElementById('modal-title');
+        const modalContent = document.getElementById('modal-content');
+        modalTitle.textContent = `Gemini Insight for ${ticker}`;
+        modalContent.innerHTML = `<div class="flex justify-center items-center h-32"><div class="spinner !w-8 !h-8"></div></div>`;
+        modal.classList.remove('hidden');
+        
+        const prompt = `Provide a concise, bullet-pointed market analysis for the ticker ${ticker}. Include: a summary of recent social media sentiment, key technical levels (support/resistance), and one potential bullish and one potential bearish trading strategy idea based on this information.`;
+        callGeminiAPI(prompt, null, null, null, (text) => {
+             const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*/g, '<br/><br/>&bull; ');
+             modalContent.innerHTML = `<p>${formattedText}</p>`;
+        });
+    }
+
+    const wizardAskBtn = document.getElementById('wizard-ask-gemini-btn');
+    if(wizardAskBtn) {
+        wizardAskBtn.addEventListener('click', () => {
+            const wizardInput = document.getElementById('wizard-gemini-prompt');
+            if (wizardInput && wizardInput.value.trim()) {
+                callGeminiAPI(`Explain the following concept related to setting up a cloud application in simple, easy-to-understand terms for a non-technical person. Keep the explanation to 2-3 sentences. Concept: ${wizardInput.value.trim()}`, 'wizard-gemini-btn-text', 'wizard-gemini-spinner', 'wizard-gemini-response');
+            }
+        });
+    }
+    
+    // Watchlist Logic
+    const watchlistForm = document.getElementById('add-watchlist-form');
+    function renderWatchlist() {
+        const watchlistBody = document.getElementById('watchlist-body');
+        if(!watchlistBody) return;
+        watchlistBody.innerHTML = '';
+        mockWatchlist.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'flex items-center justify-between bg-gray-700/30 p-2 rounded-md';
+            row.innerHTML = `<span class="font-bold">${item.ticker}</span><div><button data-ticker="${item.ticker}" class="gemini-insight-btn text-xs bg-cyan-600/50 hover:bg-cyan-600 text-white font-semibold py-1 px-2 rounded-md transition-colors">Insight</button><button data-id="${item.id}" class="remove-watchlist-btn text-red-500 hover:text-red-400 font-bold py-1 px-2">&times;</button></div>`;
+            watchlistBody.appendChild(row);
+        });
+    }
+    if (watchlistForm) {
+        watchlistForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const watchlistInput = document.getElementById('watchlist-ticker-input');
+            const newTicker = watchlistInput.value.trim().toUpperCase();
+            if (newTicker && !mockWatchlist.some(item => item.ticker === newTicker)) {
+                mockWatchlist.push({ id: `w${Date.now()}`, ticker: newTicker });
+                renderWatchlist();
+                watchlistInput.value = '';
+            }
+        });
+    }
+    const watchlistBody = document.getElementById('watchlist-body');
+    if (watchlistBody) {
+        watchlistBody.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('.remove-watchlist-btn');
+             if (removeBtn) {
+                const idToRemove = removeBtn.getAttribute('data-id');
+                mockWatchlist = mockWatchlist.filter(item => item.id !== idToRemove);
+                renderWatchlist();
+            }
+        });
+    }
+    renderWatchlist();
+
+    updateClock();
+    setInterval(updateClock, 1000);
+});
+</script>
+</body>
+</html>

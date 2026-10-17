@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aergia Mission Control</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <div id="background-layer"></div>
+    <header>
+      <div class="brand">
+        <div class="brand-icon">MC</div>
+        <div class="brand-text">
+          <h1>Mission Control</h1>
+          <p>Autonomous Agent Operations</p>
+        </div>
+      </div>
+      <div class="network-status" id="network-status" title="Checking Connection...">
+        <div class="status-indicator" id="status-indicator"></div>
+        <span id="status-text">Connecting...</span>
+      </div>
+    </header>
+
+    <div class="dashboard">
+      <aside class="sidebar">
+        <button class="nav-btn active" data-filter="all">
+          <span>🌐</span> All Agents
+        </button>
+        <button class="nav-btn" data-filter="ares">
+          <span>🛡️</span> Project Ares
+        </button>
+        <button class="nav-btn" data-filter="midas">
+          <span>📈</span> Project Midas
+        </button>
+        <button class="nav-btn" data-filter="hermes">
+          <span>🚀</span> Project Hermes
+        </button>
+      </aside>
+
+      <main class="main-content">
+        <div class="section-title">
+          <span id="current-view-title">All Agents</span>
+          <button class="refresh-btn" id="refresh-btn">⟳ Sync Status</button>
+        </div>
+        
+        <div class="agents-grid" id="agents-grid">
+          <!-- Agent cards will be dynamically injected here by main.js -->
+        </div>
+      </main>
+    </div>
+
+    <div id="toast-container"></div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

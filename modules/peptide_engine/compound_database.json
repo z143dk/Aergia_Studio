@@ -1,0 +1,90 @@
+{
+  "Tesamorelin": {
+    "class": "GHRH Analog",
+    "target_receptor": "GHRH Receptor (Pituitary)",
+    "primary_pathway": "cAMP-PKA Signaling",
+    "primary_effect": "Stimulates endogenous GH release, visceral fat reduction",
+    "half_life": "~26-38 minutes",
+    "ncbi_mesh_terms": ["Tesamorelin", "Growth Hormone-Releasing Hormone", "Lipodystrophy"]
+  },
+  "SS-31": {
+    "class": "Mitochondrial-Targeted Peptide (Elamipretide)",
+    "target_receptor": "Inner Mitochondrial Membrane (Cardiolipin)",
+    "primary_pathway": "Electron Transport Chain Optimization / ROS Reduction",
+    "primary_effect": "Mitochondrial bioenergetics, vascular & tissue protection",
+    "half_life": "~2 hours",
+    "ncbi_mesh_terms": ["Elamipretide", "Cardiolipin", "Mitochondrial Dysfunction"]
+  },
+  "MOTS-c": {
+    "class": "Mitochondrial-Derived Peptide (MDP)",
+    "target_receptor": "Nuclear / Cytosolic AMPK Target",
+    "primary_pathway": "AMPK Activation / Folate-Metabolism Interplay",
+    "primary_effect": "Insulin sensitivity, metabolic homeostasis, exercise mimetic",
+    "half_life": "~30 minutes",
+    "ncbi_mesh_terms": ["MOTS-c peptide", "AMP-Activated Protein Kinases", "Metabolic Homeostasis"]
+  },
+  "5-Amino-1MQ": {
+    "class": "NNMT Inhibitor",
+    "target_receptor": "Nicotinamide N-methyltransferase Enzyme",
+    "primary_pathway": "NAD+ Salvage Pathway Preservation",
+    "primary_effect": "Adipocyte metabolic rate elevation, intracellular NAD+ conservation",
+    "half_life": "Variable / Small Molecule Inhibitor",
+    "ncbi_mesh_terms": ["Nicotinamide N-Methyltransferase", "NAD", "Adipocytes"]
+  },
+  "Ipamorelin": {
+    "class": "GHRP / Growth Hormone Secretagogue",
+    "target_receptor": "GHS-R1a (Ghrelin Receptor)",
+    "primary_pathway": "IP3-DAG Signaling / Calcium Release",
+    "primary_effect": "Selective endogenous GH pulse stimulation without spiking cortisol or prolactin",
+    "half_life": "~2 hours",
+    "ncbi_mesh_terms": ["Ipamorelin", "Ghrelin Receptors", "Growth Hormone-Releasing Peptides"]
+  },
+  "Semax": {
+    "class": "Synthetic ACTH(4-10) Analog / Neuropeptide",
+    "target_receptor": "Melanocortin Receptors (Non-selective)",
+    "primary_pathway": "BDNF & TrkB Activation / Dopaminergic & Serotonergic Modulation",
+    "primary_effect": "Neuroprotection, cognitive enhancement, memory support, and ADHD management",
+    "half_life": "~2-4 hours (extended biological action)",
+    "ncbi_mesh_terms": ["Semax", "Brain-Derived Neurotrophic Factor", "Neuropeptides"]
+  },
+  "Selank": {
+    "class": "Synthetic Tuftsin Analog / Neuropeptide",
+    "target_receptor": "GABA-A Receptors (Allosteric Modulation) / Enkephalinase Inhibition",
+    "primary_pathway": "GABAergic signaling & Enkephalin conservation",
+    "primary_effect": "Anxiolytic, stress resilience, immunomodulatory support without sedation",
+    "half_life": "~2-4 hours",
+    "ncbi_mesh_terms": ["Selank", "Tuftsin", "Anxiolytic Agents"]
+  },
+  "Pinealon": {
+    "class": "Synthetic Tripeptide (Glu-Asp-Arg)",
+    "target_receptor": "Nuclear Chromatin / Epigenetic Targets",
+    "primary_pathway": "BDNF Gene Expression Activation / Epigenetic Bioregulation",
+    "primary_effect": "Pineal gland function normalization, circadian rhythm regulation, neuroprotection",
+    "half_life": "Variable (Tripeptide)",
+    "ncbi_mesh_terms": ["Pinealon", "Epigenomics", "Pineal Gland"]
+  },
+  "Kisspeptin": {
+    "class": "Endocrine Bioregulatory Neuropeptide",
+    "target_receptor": "KISS1R (GPR54)",
+    "primary_pathway": "PLC-IP3 Signaling / GnRH Pulsatility Control",
+    "primary_effect": "Hypothalamic-Pituitary-Gonadal (HPG) axis stimulation, gonadotropin release",
+    "half_life": "~20-30 minutes",
+    "ncbi_mesh_terms": ["Kisspeptins", "Receptors, G-Protein-Coupled", "Gonadotropin-Releasing Hormone"]
+  },
+  "Glutathione": {
+    "class": "Endogenous Intracellular Antioxidant",
+    "target_receptor": "None (Direct chemical reduction & enzymatic cofactor)",
+    "primary_pathway": "Glutathione Peroxidase & S-Transferase Redox Cycles",
+    "primary_effect": "Free radical scavenging, cellular detoxification, heavy metal conjugation",
+    "half_life": "~1.5-2 hours (in plasma)",
+    "ncbi_mesh_terms": ["Glutathione", "Oxidative Stress", "Antioxidants"]
+  },
+  "NAD+": {
+    "class": "Coenzyme / Metabolic Bioregulator",
+    "target_receptor": "Sirtuins (SIRT1-7) & PARPs",
+    "primary_pathway": "Mitochondrial Oxidative Phosphorylation & Deacetylation",
+    "primary_effect": "ATP production, DNA repair enzyme activation, sirtuin-mediated longevity pathways",
+    "half_life": "Extremely short (rapid cellular uptake & metabolism)",
+    "ncbi_mesh_terms": ["NAD", "Sirtuins", "Adenosine Triphosphate"]
+  }
+}
