@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
 import sqlite3
 from datetime import datetime, timedelta
 
@@ -35,6 +35,7 @@ class HealthOpsApp:
         self.tab_analyzer = tk.Frame(self.notebook, bg="#111827")
         self.tab_baselines = tk.Frame(self.notebook, bg="#111827")
         self.tab_workouts = tk.Frame(self.notebook, bg="#111827")
+        self.tab_axl = tk.Frame(self.notebook, bg="#111827")
 
         self.notebook.add(self.tab_checklist, text="Daily Checklist")
         self.notebook.add(self.tab_reconstitution, text="Reconstitution & Blending")
@@ -42,6 +43,7 @@ class HealthOpsApp:
         self.notebook.add(self.tab_analyzer, text="Redundancy Analyzer")
         self.notebook.add(self.tab_baselines, text="Baseline & Labs")
         self.notebook.add(self.tab_workouts, text="Workouts & Recovery")
+        self.notebook.add(self.tab_axl, text="AXL Inventory")
 
         self.setup_checklist_tab()
         self.setup_reconstitution_tab()
@@ -49,6 +51,7 @@ class HealthOpsApp:
         self.setup_analyzer_tab()
         self.setup_baselines_tab()
         self.setup_workouts_tab()
+        self.setup_axl_tab()
 
     def init_db(self):
         conn = sqlite3.connect("health_ops.db")
@@ -97,6 +100,27 @@ class HealthOpsApp:
                 depletion_date TEXT
             )
         """)
+
+        # Create reorder_items table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS reorder_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                compound TEXT NOT NULL,
+                vendor_code TEXT NOT NULL,
+                specification TEXT NOT NULL,
+                kit_price REAL NOT NULL,
+                kits INTEGER NOT NULL
+            )
+        """)
+
+        # Create do_not_reorder table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS do_not_reorder (
+                compound TEXT PRIMARY KEY,
+                reason TEXT
+            )
+        """)
+        cursor.execute("INSERT OR IGNORE INTO do_not_reorder (compound, reason) VALUES ('Vitamin B12', 'Covered by Lipo-C; standalone B12 removed Sep 2026')")
         
         # Create settings table
         cursor.execute("""
@@ -126,6 +150,21 @@ class HealthOpsApp:
                 recorded_value REAL NOT NULL,
                 recorded_date TEXT NOT NULL,
                 notes TEXT
+            )
+        """)
+
+        # Create axl_inventory table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS axl_inventory (
+                name TEXT NOT NULL,
+                category TEXT NOT NULL,
+                quantity REAL NOT NULL,
+                unit TEXT NOT NULL,
+                batch_code TEXT,
+                low_stock_threshold REAL,
+                per_unit_use REAL,
+                notes TEXT,
+                updated_at TEXT
             )
         """)
         
@@ -590,19 +629,44 @@ class HealthOpsApp:
         for w in self.tab_orders.winfo_children():
             w.destroy()
 
-        title = tk.Label(self.tab_orders, text="Local Supplement & Peptide Order Planner & Pricing", font=("Courier", 16, "bold"), fg="#3b82f6", bg="#111827")
+        # Canvas with vertical scrollbar to fit all panels smoothly
+        canvas = tk.Canvas(self.tab_orders, bg="#111827", highlightthickness=0)
+        v_scroll = ttk.Scrollbar(self.tab_orders, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=v_scroll.set)
+
+        v_scroll.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        content_frame = tk.Frame(canvas, bg="#111827")
+        canvas_window = canvas.create_window((0, 0), window=content_frame, anchor="nw")
+
+        def _on_frame_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        def _on_canvas_configure(event):
+            canvas.itemconfig(canvas_window, width=event.width)
+
+        content_frame.bind("<Configure>", _on_frame_configure)
+        canvas.bind("<Configure>", _on_canvas_configure)
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        content_frame.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+        content_frame.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+        title = tk.Label(content_frame, text="Local Supplement & Peptide Order Planner & Pricing", font=("Courier", 16, "bold"), fg="#3b82f6", bg="#111827")
         title.pack(pady=5)
 
-        shipping_lbl = tk.Label(self.tab_orders, text="⚠️ Note: Flat Shipping Fee of $70.00 applies to all orders.", font=("Arial", 11, "bold"), fg="#f59e0b", bg="#111827")
+        shipping_lbl = tk.Label(content_frame, text="⚠️ Note: Flat Shipping Fee of $70.00 applies to all orders.", font=("Arial", 11, "bold"), fg="#f59e0b", bg="#111827")
         shipping_lbl.pack(pady=2)
 
-        # Re-order reference list
-        reorder_frame = tk.LabelFrame(self.tab_orders, text="Vendor Reference & Re-Order Planning (10-Vial Kits)", fg="#60a5fa", bg="#1f2937", padx=10, pady=10, font=("Arial", 10, "bold"))
+        # 1. Vendor Reference List
+        reorder_frame = tk.LabelFrame(content_frame, text="Vendor Reference & Re-Order Planning (10-Vial Kits)", fg="#60a5fa", bg="#1f2937", padx=10, pady=10, font=("Arial", 10, "bold"))
         reorder_frame.pack(fill="x", padx=15, pady=5)
 
-        # Table columns for reordering
         ro_cols = ("Compound", "Vendor Code", "Specification", "Kit Price", "Lifespan", "Trigger Month")
-        ro_tree = ttk.Treeview(reorder_frame, columns=ro_cols, show="headings", height=8)
+        ro_tree = ttk.Treeview(reorder_frame, columns=ro_cols, show="headings", height=6)
         ro_tree.pack(fill="x")
 
         for col in ro_cols:
@@ -761,8 +825,87 @@ class HealthOpsApp:
         for row in pricing_data:
             ro_tree.insert("", "end", values=row)
 
-        # Logging input UI
-        input_frame = tk.Frame(self.tab_orders, bg="#1f2937", padx=10, pady=10)
+        # 2. Reorder Planner & Budget Check (Panel C)
+        planner_frame = tk.LabelFrame(content_frame, text="Reorder Planner & Budget Check", fg="#60a5fa", bg="#1f2937", padx=10, pady=10, font=("Arial", 10, "bold"))
+        planner_frame.pack(fill="x", padx=15, pady=5)
+
+        ctrl_frame = tk.Frame(planner_frame, bg="#1f2937")
+        ctrl_frame.pack(fill="x", pady=2)
+
+        # Read live vendor reference table data (never hardcode prices)
+        vendor_options = []
+        for item_id in ro_tree.get_children():
+            v = ro_tree.item(item_id)['values']
+            vendor_options.append(f"{v[0]} — {v[1]} — {v[2]} — {v[3]}")
+
+        tk.Label(ctrl_frame, text="Select Item:", fg="#ffffff", bg="#1f2937", font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        self.combo_vendor = ttk.Combobox(ctrl_frame, values=vendor_options, width=42, state="readonly")
+        if vendor_options:
+            self.combo_vendor.current(0)
+        self.combo_vendor.pack(side="left", padx=5)
+
+        tk.Label(ctrl_frame, text="Kits:", fg="#ffffff", bg="#1f2937", font=("Arial", 9, "bold")).pack(side="left", padx=(10, 5))
+        self.entry_kits = tk.Entry(ctrl_frame, width=5)
+        self.entry_kits.insert(0, "1")
+        self.entry_kits.pack(side="left", padx=5)
+
+        btn_add_reorder = tk.Button(ctrl_frame, text="ADD TO REORDER", font=("Arial", 9, "bold"), fg="#ffffff", bg="#2563eb", command=self.add_to_reorder)
+        btn_add_reorder.pack(side="left", padx=10)
+
+        # Reorder list table
+        reorder_table_frame = tk.Frame(planner_frame, bg="#111827")
+        reorder_table_frame.pack(fill="x", pady=8)
+
+        reorder_cols = ("Compound", "Vendor Code", "Specification", "Kit Price", "Kits", "Line Total")
+        self.reorder_tree = ttk.Treeview(reorder_table_frame, columns=reorder_cols, show="headings", height=4)
+        self.reorder_tree.pack(side="left", fill="x", expand=True)
+
+        for col in reorder_cols:
+            self.reorder_tree.heading(col, text=col)
+        self.reorder_tree.column("Compound", width=180, anchor="w")
+        self.reorder_tree.column("Vendor Code", width=95, anchor="center")
+        self.reorder_tree.column("Specification", width=130, anchor="center")
+        self.reorder_tree.column("Kit Price", width=95, anchor="center")
+        self.reorder_tree.column("Kits", width=65, anchor="center")
+        self.reorder_tree.column("Line Total", width=105, anchor="center")
+
+        scroll_reorder = ttk.Scrollbar(reorder_table_frame, orient="vertical", command=self.reorder_tree.yview)
+        scroll_reorder.pack(side="right", fill="y")
+        self.reorder_tree.configure(yscrollcommand=scroll_reorder.set)
+
+        # Totals and Remove button
+        strip_frame = tk.Frame(planner_frame, bg="#1f2937")
+        strip_frame.pack(fill="x", pady=4)
+
+        btn_remove_reorder = tk.Button(strip_frame, text="REMOVE SELECTED", font=("Arial", 9), fg="#ffffff", bg="#ef4444", command=self.remove_reorder_item)
+        btn_remove_reorder.pack(side="left", padx=2)
+
+        self.lbl_reorder_totals = tk.Label(strip_frame, text="Subtotal: $0.00   |   Shipping: $0.00   |   TOTAL: $0.00", font=("Arial", 11, "bold"), fg="#f59e0b", bg="#1f2937")
+        self.lbl_reorder_totals.pack(side="right", padx=10)
+
+        # Budget Check strip
+        budget_strip = tk.Frame(planner_frame, bg="#111827", padx=10, pady=6)
+        budget_strip.pack(fill="x", pady=(4, 0))
+
+        tk.Label(budget_strip, text="My budget $:", fg="#ffffff", bg="#111827", font=("Arial", 10, "bold")).pack(side="left", padx=(0, 6))
+        self.entry_budget = tk.Entry(budget_strip, width=12)
+
+        conn = sqlite3.connect("health_ops.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM settings WHERE key = 'reorder_budget'")
+        b_row = cursor.fetchone()
+        conn.close()
+        if b_row and b_row[0] is not None:
+            self.entry_budget.insert(0, str(b_row[0]))
+
+        self.entry_budget.pack(side="left", padx=5)
+        self.entry_budget.bind("<KeyRelease>", self.update_budget_status)
+
+        self.lbl_budget_status = tk.Label(budget_strip, text="Set a budget to check affordability", font=("Arial", 10, "bold"), fg="#9ca3af", bg="#111827")
+        self.lbl_budget_status.pack(side="left", padx=15)
+
+        # 3. Log Compound Order (Log Order form)
+        input_frame = tk.LabelFrame(content_frame, text="Log Compound Order", fg="#60a5fa", bg="#1f2937", padx=10, pady=10, font=("Arial", 10, "bold"))
         input_frame.pack(fill="x", padx=15, pady=5)
 
         tk.Label(input_frame, text="Item Name:", fg="#ffffff", bg="#1f2937").grid(row=0, column=0, padx=5, pady=2, sticky="e")
@@ -798,9 +941,52 @@ class HealthOpsApp:
         self.entry_size.bind("<KeyRelease>", self.recalculate_reconstitution)
         self.entry_dose.bind("<KeyRelease>", self.recalculate_reconstitution)
 
-        # Logged table display
-        self.tree_frame = tk.Frame(self.tab_orders, bg="#111827")
-        self.tree_frame.pack(fill="both", expand=True, padx=15, pady=5)
+        # 4. Current Inventory Summary (Panel B & D)
+        summary_frame = tk.LabelFrame(content_frame, text="Current Inventory Summary (Active Orders)", fg="#60a5fa", bg="#1f2937", padx=10, pady=10, font=("Arial", 10, "bold"))
+        summary_frame.pack(fill="x", padx=15, pady=5)
+
+        summary_table_frame = tk.Frame(summary_frame, bg="#111827")
+        summary_table_frame.pack(fill="x", pady=4)
+
+        summary_cols = ("Compound", "Total Vials", "Last Order Date", "Soonest Est. Depletion", "Reorder Status")
+        self.summary_tree = ttk.Treeview(summary_table_frame, columns=summary_cols, show="headings", height=5)
+        self.summary_tree.pack(side="left", fill="x", expand=True)
+
+        self.summary_tree.heading("Compound", text="Compound")
+        self.summary_tree.heading("Total Vials", text="Total Vials Ordered")
+        self.summary_tree.heading("Last Order Date", text="Last Order Date")
+        self.summary_tree.heading("Soonest Est. Depletion", text="Soonest Est. Depletion")
+        self.summary_tree.heading("Reorder Status", text="Reorder Status / Reason")
+
+        self.summary_tree.column("Compound", width=180, anchor="w")
+        self.summary_tree.column("Total Vials", width=130, anchor="center")
+        self.summary_tree.column("Last Order Date", width=120, anchor="center")
+        self.summary_tree.column("Soonest Est. Depletion", width=150, anchor="center")
+        self.summary_tree.column("Reorder Status", width=300, anchor="w")
+
+        scroll_summary = ttk.Scrollbar(summary_table_frame, orient="vertical", command=self.summary_tree.yview)
+        scroll_summary.pack(side="right", fill="y")
+        self.summary_tree.configure(yscrollcommand=scroll_summary.set)
+
+        self.summary_tree.tag_configure("flagged", foreground="#9ca3af")
+        self.summary_tree.tag_configure("soonest", foreground="#f87171")
+        self.summary_tree.tag_configure("normal", foreground="#f3f4f6")
+
+        summary_btn_frame = tk.Frame(summary_frame, bg="#1f2937")
+        summary_btn_frame.pack(fill="x", pady=(4, 0))
+
+        btn_flag = tk.Button(summary_btn_frame, text="FLAG / UNFLAG DO NOT REORDER", font=("Arial", 9, "bold"), fg="#ffffff", bg="#4b5563", command=self.toggle_do_not_reorder)
+        btn_flag.pack(side="left", padx=2)
+
+        lbl_flag_hint = tk.Label(summary_btn_frame, text="* Greyed out compounds indicate 'Do Not Reorder' status and are excluded from soonest depletion alerts.", font=("Arial", 9, "italic"), fg="#9ca3af", bg="#1f2937")
+        lbl_flag_hint.pack(side="left", padx=10)
+
+        # 5. Order History & Depletion Tracking (Panel A)
+        history_frame = tk.LabelFrame(content_frame, text="Order History & Depletion Tracking", fg="#60a5fa", bg="#1f2937", padx=10, pady=10, font=("Arial", 10, "bold"))
+        history_frame.pack(fill="both", expand=True, padx=15, pady=5)
+
+        self.tree_frame = tk.Frame(history_frame, bg="#111827")
+        self.tree_frame.pack(fill="both", expand=True, pady=4)
 
         self.tree = ttk.Treeview(self.tree_frame, columns=("Item", "Ordered", "Qty", "Dose", "Freq", "Est. Depletion"), show="headings", height=5)
         self.tree.pack(side="left", fill="both", expand=True)
@@ -823,15 +1009,229 @@ class HealthOpsApp:
         scrollbar_tree.pack(side="right", fill="y")
         self.tree.configure(yscrollcommand=scrollbar_tree.set)
 
+        btn_delete_order = tk.Button(history_frame, text="DELETE SELECTED ORDER", font=("Arial", 9, "bold"), fg="#ffffff", bg="#ef4444", command=self.delete_selected_order)
+        btn_delete_order.pack(anchor="w", pady=4)
+
+        # Initial data load
+        self.load_reorder_items()
+        self.load_inventory_summary()
         self.load_orders()
+
+    def add_to_reorder(self):
+        try:
+            selected_str = self.combo_vendor.get().strip()
+            if not selected_str:
+                messagebox.showwarning("Selection Required", "Please select a vendor item from the dropdown.")
+                return
+
+            kits_str = self.entry_kits.get().strip()
+            if not kits_str:
+                raise ValueError("Kits quantity is required.")
+            kits = int(kits_str)
+            if kits <= 0:
+                raise ValueError("Kits quantity must be greater than 0.")
+
+            parts = [p.strip() for p in selected_str.split(" — ")]
+            if len(parts) < 4:
+                raise ValueError("Unexpected vendor item format.")
+
+            compound = parts[0]
+            vendor_code = parts[1]
+            specification = parts[2]
+            price_str = parts[3].replace("$", "").strip()
+            kit_price = float(price_str)
+
+            conn = sqlite3.connect("health_ops.db")
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO reorder_items (compound, vendor_code, specification, kit_price, kits)
+                VALUES (?, ?, ?, ?, ?)
+            """, (compound, vendor_code, specification, kit_price, kits))
+            conn.commit()
+            conn.close()
+
+            self.load_reorder_items()
+            self.entry_kits.delete(0, tk.END)
+            self.entry_kits.insert(0, "1")
+
+        except Exception as e:
+            messagebox.showerror("Input Error", f"Unable to add item to reorder list.\n{str(e)}")
+
+    def remove_reorder_item(self):
+        selected = self.reorder_tree.selection()
+        if not selected:
+            messagebox.showwarning("Selection Required", "Please select an item from the reorder list to remove.")
+            return
+
+        rowid = selected[0]
+        if messagebox.askyesno("Confirm Remove", "Remove this item from the reorder list?"):
+            conn = sqlite3.connect("health_ops.db")
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM reorder_items WHERE rowid = ?", (rowid,))
+            conn.commit()
+            conn.close()
+            self.load_reorder_items()
+
+    def load_reorder_items(self):
+        for row in self.reorder_tree.get_children():
+            self.reorder_tree.delete(row)
+
+        conn = sqlite3.connect("health_ops.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT rowid, compound, vendor_code, specification, kit_price, kits FROM reorder_items ORDER BY rowid ASC")
+        rows = cursor.fetchall()
+        conn.close()
+
+        subtotal = 0.0
+        for r in rows:
+            rowid, compound, code, spec, kit_price, kits = r
+            line_total = kit_price * kits
+            subtotal += line_total
+            self.reorder_tree.insert("", "end", iid=str(rowid), values=(
+                compound, code, spec, f"${kit_price:.2f}", kits, f"${line_total:.2f}"
+            ))
+
+        shipping = 70.0 if len(rows) > 0 else 0.0
+        total = subtotal + shipping
+
+        self.reorder_subtotal = subtotal
+        self.reorder_shipping = shipping
+        self.reorder_total = total
+
+        self.lbl_reorder_totals.config(
+            text=f"Subtotal: ${subtotal:.2f}   |   Shipping: ${shipping:.2f}   |   TOTAL: ${total:.2f}"
+        )
+        self.update_budget_status()
+
+    def update_budget_status(self, event=None):
+        budget_str = self.entry_budget.get().strip()
+        conn = sqlite3.connect("health_ops.db")
+        cursor = conn.cursor()
+        cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('reorder_budget', ?)", (budget_str,))
+        conn.commit()
+        conn.close()
+
+        total = getattr(self, "reorder_total", 0.0)
+
+        if not budget_str:
+            self.lbl_budget_status.config(
+                text="Set a budget to check affordability",
+                fg="#9ca3af"
+            )
+            return
+
+        try:
+            budget = float(budget_str)
+        except ValueError:
+            self.lbl_budget_status.config(
+                text="Invalid budget format",
+                fg="#ef4444"
+            )
+            return
+
+        if total <= budget:
+            left = budget - total
+            self.lbl_budget_status.config(
+                text=f"Within budget — ${left:.2f} left",
+                fg="#10b981"
+            )
+        else:
+            over = total - budget
+            self.lbl_budget_status.config(
+                text=f"Over budget by ${over:.2f}",
+                fg="#ef4444"
+            )
+
+    def load_inventory_summary(self):
+        for row in self.summary_tree.get_children():
+            self.summary_tree.delete(row)
+
+        conn = sqlite3.connect("health_ops.db")
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT compound, reason FROM do_not_reorder")
+        flagged = dict(cursor.fetchall())
+
+        cursor.execute("""
+            SELECT item_name, SUM(quantity_vials), MAX(order_date)
+            FROM orders
+            GROUP BY item_name
+            ORDER BY item_name COLLATE NOCASE
+        """)
+        compound_rows = cursor.fetchall()
+
+        compound_data = []
+        unflagged_dates = []
+
+        for item_name, total_vials, last_order in compound_rows:
+            cursor.execute("""
+                SELECT depletion_date FROM orders
+                WHERE item_name = ? AND depletion_date NOT LIKE 'N/A%' AND depletion_date IS NOT NULL
+                ORDER BY depletion_date ASC
+                LIMIT 1
+            """, (item_name,))
+            depl_row = cursor.fetchone()
+            soonest_depl = depl_row[0] if depl_row else "N/A"
+
+            is_flagged = item_name in flagged
+            if not is_flagged and soonest_depl != "N/A":
+                unflagged_dates.append(soonest_depl)
+
+            compound_data.append((item_name, total_vials, last_order, soonest_depl, is_flagged))
+
+        conn.close()
+
+        min_unflagged_date = min(unflagged_dates) if unflagged_dates else None
+
+        for item_name, total_vials, last_order, soonest_depl, is_flagged in compound_data:
+            if is_flagged:
+                reason = flagged.get(item_name, "Do not reorder")
+                tag = "flagged"
+                notes = f"Do Not Reorder: {reason}"
+            elif min_unflagged_date and soonest_depl == min_unflagged_date:
+                tag = "soonest"
+                notes = "⚠️ Soonest Depletion (Running Low)"
+            else:
+                tag = "normal"
+                notes = "Active Protocol"
+
+            self.summary_tree.insert("", "end", values=(
+                item_name, total_vials, last_order, soonest_depl, notes
+            ), tags=(tag,))
+
+    def toggle_do_not_reorder(self):
+        selected = self.summary_tree.selection()
+        if not selected:
+            messagebox.showwarning("Selection Required", "Please select a compound from the inventory summary first.")
+            return
+
+        compound = self.summary_tree.item(selected[0])['values'][0]
+        conn = sqlite3.connect("health_ops.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT reason FROM do_not_reorder WHERE compound = ?", (compound,))
+        row = cursor.fetchone()
+
+        if row:
+            if messagebox.askyesno('Unflag Compound', f"Compound '{compound}' is currently flagged as DO NOT REORDER:\n\n'{row[0]}'\n\nUnflag this compound and allow reordering?"):
+                cursor.execute("DELETE FROM do_not_reorder WHERE compound = ?", (compound,))
+                conn.commit()
+        else:
+            reason = simpledialog.askstring("Do Not Reorder", f"Enter reason for not reordering '{compound}':")
+            if reason is not None:
+                reason = reason.strip() or "Do not reorder"
+                cursor.execute("INSERT OR REPLACE INTO do_not_reorder (compound, reason) VALUES (?, ?)", (compound, reason))
+                conn.commit()
+
+        conn.close()
+        self.load_inventory_summary()
 
     def add_order(self):
         try:
-            item = self.entry_item.get()
-            vials = int(self.entry_vials.get())
-            size = float(self.entry_size.get())
-            dose = int(self.entry_dose.get())
-            freq = int(self.entry_freq.get())
+            item = self.entry_item.get().strip()
+            vials = int(self.entry_vials.get().strip())
+            size = float(self.entry_size.get().strip())
+            dose = int(self.entry_dose.get().strip())
+            freq = int(self.entry_freq.get().strip())
             
             if not item:
                 raise ValueError("Item name is required.")
@@ -860,10 +1260,35 @@ class HealthOpsApp:
             conn.close()
 
             messagebox.showinfo("Success", f"Logged order for {item}. Est. depletion: {depletion_date_str}")
-            self.setup_orders_tab()
+            self.load_orders()
+            self.load_inventory_summary()
+
+            # Clear inputs
+            self.entry_item.delete(0, tk.END)
+            self.entry_vials.delete(0, tk.END)
+            self.entry_size.delete(0, tk.END)
+            self.entry_dose.delete(0, tk.END)
+            self.entry_freq.delete(0, tk.END)
+            self.lbl_bac_calc.config(text="Reconstitution Guidance: Select or type values to calculate")
 
         except Exception as e:
             messagebox.showerror("Input Error", f"Please verify inputs.\n{str(e)}")
+
+    def delete_selected_order(self):
+        selected = self.tree.selection()
+        if not selected:
+            messagebox.showwarning("Selection Required", "Please select an order from the history table to delete.")
+            return
+
+        rowid = selected[0]
+        if messagebox.askyesno("Confirm Delete", "Delete this order log entry? This cannot be undone."):
+            conn = sqlite3.connect("health_ops.db")
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM orders WHERE rowid = ?", (rowid,))
+            conn.commit()
+            conn.close()
+            self.load_orders()
+            self.load_inventory_summary()
 
     def load_orders(self):
         for row in self.tree.get_children():
@@ -871,10 +1296,14 @@ class HealthOpsApp:
 
         conn = sqlite3.connect("health_ops.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT item_name, order_date, quantity_vials, dosage_units, frequency_per_week, depletion_date FROM orders")
+        cursor.execute("""
+            SELECT rowid, item_name, order_date, quantity_vials, dosage_units, frequency_per_week, depletion_date
+            FROM orders
+            ORDER BY order_date DESC, rowid DESC
+        """)
         rows = cursor.fetchall()
         for r in rows:
-            self.tree.insert("", "end", values=(r[0], r[1], r[2], r[3], r[4], r[5]))
+            self.tree.insert("", "end", iid=str(r[0]), values=(r[1], r[2], r[3], r[4], r[5], r[6]))
         conn.close()
 
     # ==================== ANALYZER TAB ====================
@@ -1934,6 +2363,322 @@ class HealthOpsApp:
         else:
             messagebox.showerror("Error", f"Poster image not found at {poster_path}")
 
+
+    # ==================== AXL INVENTORY TAB ====================
+    def setup_axl_tab(self):
+        for w in self.tab_axl.winfo_children():
+            w.destroy()
+
+        canvas = tk.Canvas(self.tab_axl, bg="#111827", highlightthickness=0)
+        v_scroll = ttk.Scrollbar(self.tab_axl, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=v_scroll.set)
+
+        v_scroll.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        content_frame = tk.Frame(canvas, bg="#111827")
+        canvas_window = canvas.create_window((0, 0), window=content_frame, anchor="nw")
+
+        def _on_frame_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        def _on_canvas_configure(event):
+            canvas.itemconfig(canvas_window, width=event.width)
+
+        content_frame.bind("<Configure>", _on_frame_configure)
+        canvas.bind("<Configure>", _on_canvas_configure)
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        content_frame.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+        content_frame.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+        title = tk.Label(content_frame, text="AXL LLC — Physical Inventory & Stock Tracker", font=("Courier", 16, "bold"), fg="#3b82f6", bg="#111827")
+        title.pack(pady=5)
+
+        # 1. Summary Strip
+        summary_frame = tk.LabelFrame(content_frame, text="Inventory Summary & Yield Estimates", fg="#60a5fa", bg="#1f2937", padx=10, pady=8, font=("Arial", 10, "bold"))
+        summary_frame.pack(fill="x", padx=15, pady=5)
+
+        self.lbl_axl_counts = tk.Label(summary_frame, text="Total Items: 0   |   Finished Goods: 0   |   Base & Ingredients: 0   |   Containers & Packaging: 0", font=("Arial", 10, "bold"), fg="#ffffff", bg="#1f2937")
+        self.lbl_axl_counts.pack(anchor="w", pady=2)
+
+        self.lbl_axl_yields = tk.Label(summary_frame, text="", font=("Arial", 10, "bold"), fg="#34d399", bg="#1f2937")
+        self.lbl_axl_yields.pack(anchor="w", pady=2)
+
+        # 2. Main Stock Table
+        table_frame = tk.LabelFrame(content_frame, text="Physical Stock Levels", fg="#60a5fa", bg="#1f2937", padx=10, pady=8, font=("Arial", 10, "bold"))
+        table_frame.pack(fill="both", expand=True, padx=15, pady=5)
+
+        tree_container = tk.Frame(table_frame, bg="#111827")
+        tree_container.pack(fill="both", expand=True, pady=4)
+
+        axl_cols = ("Name", "Category", "Quantity", "Unit", "Batch", "Low-Stock At", "Notes", "Last Updated")
+        self.axl_tree = ttk.Treeview(tree_container, columns=axl_cols, show="headings", height=8)
+        self.axl_tree.pack(side="left", fill="both", expand=True)
+
+        for col in axl_cols:
+            self.axl_tree.heading(col, text=col)
+
+        self.axl_tree.column("Name", width=170, anchor="w")
+        self.axl_tree.column("Category", width=150, anchor="center")
+        self.axl_tree.column("Quantity", width=90, anchor="center")
+        self.axl_tree.column("Unit", width=70, anchor="center")
+        self.axl_tree.column("Batch", width=100, anchor="center")
+        self.axl_tree.column("Low-Stock At", width=95, anchor="center")
+        self.axl_tree.column("Notes", width=220, anchor="w")
+        self.axl_tree.column("Last Updated", width=100, anchor="center")
+
+        scroll_tree = ttk.Scrollbar(tree_container, orient="vertical", command=self.axl_tree.yview)
+        scroll_tree.pack(side="right", fill="y")
+        self.axl_tree.configure(yscrollcommand=scroll_tree.set)
+
+        self.axl_tree.tag_configure("low_stock", foreground="#f87171")
+        self.axl_tree.tag_configure("normal", foreground="#f3f4f6")
+
+        # Action strip under table
+        action_strip = tk.Frame(table_frame, bg="#1f2937")
+        action_strip.pack(fill="x", pady=6)
+
+        tk.Label(action_strip, text="Adjust Quantity (+ / - / exact):", fg="#ffffff", bg="#1f2937", font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        self.entry_axl_adjust = tk.Entry(action_strip, width=12)
+        self.entry_axl_adjust.pack(side="left", padx=5)
+
+        btn_adjust = tk.Button(action_strip, text="APPLY ADJUSTMENT", font=("Arial", 9, "bold"), fg="#ffffff", bg="#2563eb", command=self.adjust_axl_quantity)
+        btn_adjust.pack(side="left", padx=6)
+
+        btn_delete = tk.Button(action_strip, text="DELETE ITEM", font=("Arial", 9, "bold"), fg="#ffffff", bg="#ef4444", command=self.delete_axl_item)
+        btn_delete.pack(side="left", padx=15)
+
+        lbl_warn_hint = tk.Label(action_strip, text="* Red highlighted rows indicate stock at or below low-stock threshold.", font=("Arial", 9, "italic"), fg="#f87171", bg="#1f2937")
+        lbl_warn_hint.pack(side="right", padx=5)
+
+        # 3. Add Item Form
+        form_frame = tk.LabelFrame(content_frame, text="Add New Inventory Item", fg="#60a5fa", bg="#1f2937", padx=10, pady=8, font=("Arial", 10, "bold"))
+        form_frame.pack(fill="x", padx=15, pady=5)
+
+        # Grid row 0
+        tk.Label(form_frame, text="Item Name:", fg="#ffffff", bg="#1f2937").grid(row=0, column=0, padx=5, pady=3, sticky="e")
+        self.entry_axl_name = tk.Entry(form_frame, width=18)
+        self.entry_axl_name.grid(row=0, column=1, padx=5, pady=3, sticky="w")
+
+        tk.Label(form_frame, text="Category:", fg="#ffffff", bg="#1f2937").grid(row=0, column=2, padx=5, pady=3, sticky="e")
+        self.combo_axl_cat = ttk.Combobox(form_frame, values=["Finished Goods", "Base & Ingredients", "Containers & Packaging"], width=20, state="readonly")
+        self.combo_axl_cat.current(0)
+        self.combo_axl_cat.grid(row=0, column=3, padx=5, pady=3, sticky="w")
+
+        tk.Label(form_frame, text="Quantity:", fg="#ffffff", bg="#1f2937").grid(row=0, column=4, padx=5, pady=3, sticky="e")
+        self.entry_axl_qty = tk.Entry(form_frame, width=10)
+        self.entry_axl_qty.grid(row=0, column=5, padx=5, pady=3, sticky="w")
+
+        tk.Label(form_frame, text="Unit:", fg="#ffffff", bg="#1f2937").grid(row=0, column=6, padx=5, pady=3, sticky="e")
+        self.entry_axl_unit = tk.Entry(form_frame, width=10)
+        self.entry_axl_unit.grid(row=0, column=7, padx=5, pady=3, sticky="w")
+
+        # Grid row 1
+        tk.Label(form_frame, text="Batch Code:", fg="#ffffff", bg="#1f2937").grid(row=1, column=0, padx=5, pady=3, sticky="e")
+        self.entry_axl_batch = tk.Entry(form_frame, width=18)
+        self.entry_axl_batch.grid(row=1, column=1, padx=5, pady=3, sticky="w")
+
+        tk.Label(form_frame, text="Low-Stock At:", fg="#ffffff", bg="#1f2937").grid(row=1, column=2, padx=5, pady=3, sticky="e")
+        self.entry_axl_threshold = tk.Entry(form_frame, width=10)
+        self.entry_axl_threshold.grid(row=1, column=3, padx=5, pady=3, sticky="w")
+
+        tk.Label(form_frame, text="Per-Unit Use:", fg="#ffffff", bg="#1f2937").grid(row=1, column=4, padx=5, pady=3, sticky="e")
+        self.entry_axl_use = tk.Entry(form_frame, width=10)
+        self.entry_axl_use.grid(row=1, column=5, padx=5, pady=3, sticky="w")
+
+        tk.Label(form_frame, text="Notes:", fg="#ffffff", bg="#1f2937").grid(row=1, column=6, padx=5, pady=3, sticky="e")
+        self.entry_axl_notes = tk.Entry(form_frame, width=18)
+        self.entry_axl_notes.grid(row=1, column=7, padx=5, pady=3, sticky="w")
+
+        # Grid row 2
+        btn_add = tk.Button(form_frame, text="ADD ITEM", font=("Arial", 9, "bold"), fg="#ffffff", bg="#10b981", command=self.add_axl_item)
+        btn_add.grid(row=2, column=0, columnspan=8, pady=8, sticky="we", padx=10)
+
+        # Initial load
+        self.load_axl_inventory()
+
+    def load_axl_inventory(self):
+        for row in self.axl_tree.get_children():
+            self.axl_tree.delete(row)
+
+        conn = sqlite3.connect("health_ops.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT rowid, name, category, quantity, unit, batch_code, low_stock_threshold, per_unit_use, notes, updated_at
+            FROM axl_inventory
+            ORDER BY category ASC, name COLLATE NOCASE ASC
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+
+        total_items = len(rows)
+        cat_counts = {"Finished Goods": 0, "Base & Ingredients": 0, "Containers & Packaging": 0}
+        yield_hints = []
+
+        for r in rows:
+            rowid, name, cat, qty, unit, batch, thresh, use_val, notes, updated = r
+            if cat in cat_counts:
+                cat_counts[cat] += 1
+            else:
+                cat_counts[cat] = 1
+
+            if use_val is not None and use_val > 0:
+                n_units = int(qty // use_val)
+                yield_hints.append(f"{name}: ≈ {n_units} finished units")
+
+            is_low = (thresh is not None and thresh > 0 and qty <= thresh)
+            tag = "low_stock" if is_low else "normal"
+
+            qty_display = f"{qty:g}" if isinstance(qty, (int, float)) else str(qty)
+            thresh_display = f"{thresh:g}" if thresh is not None and thresh > 0 else ""
+
+            self.axl_tree.insert("", "end", iid=str(rowid), values=(
+                name, cat, qty_display, unit, batch or "", thresh_display, notes or "", updated or ""
+            ), tags=(tag,))
+
+        self.lbl_axl_counts.config(
+            text=f"Total Items: {total_items}   |   Finished Goods: {cat_counts.get('Finished Goods', 0)}   |   Base & Ingredients: {cat_counts.get('Base & Ingredients', 0)}   |   Containers & Packaging: {cat_counts.get('Containers & Packaging', 0)}"
+        )
+
+        if yield_hints:
+            self.lbl_axl_yields.config(
+                text="Yield Estimates: " + "   |   ".join(yield_hints)
+            )
+        else:
+            self.lbl_axl_yields.config(text="")
+
+    def add_axl_item(self):
+        name = self.entry_axl_name.get().strip()
+        category = self.combo_axl_cat.get().strip()
+        qty_str = self.entry_axl_qty.get().strip()
+        unit = self.entry_axl_unit.get().strip()
+        batch = self.entry_axl_batch.get().strip()
+        thresh_str = self.entry_axl_threshold.get().strip()
+        use_str = self.entry_axl_use.get().strip()
+        notes = self.entry_axl_notes.get().strip()
+
+        if not name:
+            messagebox.showwarning("Input Required", "Item name is required.")
+            return
+        if not category:
+            messagebox.showwarning("Input Required", "Category is required.")
+            return
+        if not qty_str:
+            messagebox.showwarning("Input Required", "Quantity is required.")
+            return
+        if not unit:
+            messagebox.showwarning("Input Required", "Unit is required.")
+            return
+
+        try:
+            quantity = float(qty_str)
+        except ValueError:
+            messagebox.showerror("Invalid Input", "Quantity must be a valid number.")
+            return
+
+        low_stock_threshold = None
+        if thresh_str:
+            try:
+                low_stock_threshold = float(thresh_str)
+            except ValueError:
+                messagebox.showerror("Invalid Input", "Low-stock threshold must be a valid number.")
+                return
+
+        per_unit_use = None
+        if use_str:
+            try:
+                per_unit_use = float(use_str)
+            except ValueError:
+                messagebox.showerror("Invalid Input", "Per-unit use must be a valid number.")
+                return
+
+        updated_at = datetime.now().strftime("%Y-%m-%d")
+
+        conn = sqlite3.connect("health_ops.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO axl_inventory (name, category, quantity, unit, batch_code, low_stock_threshold, per_unit_use, notes, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (name, category, quantity, unit, batch or None, low_stock_threshold, per_unit_use, notes or None, updated_at))
+        conn.commit()
+        conn.close()
+
+        # Clear inputs
+        self.entry_axl_name.delete(0, tk.END)
+        self.combo_axl_cat.current(0)
+        self.entry_axl_qty.delete(0, tk.END)
+        self.entry_axl_unit.delete(0, tk.END)
+        self.entry_axl_batch.delete(0, tk.END)
+        self.entry_axl_threshold.delete(0, tk.END)
+        self.entry_axl_use.delete(0, tk.END)
+        self.entry_axl_notes.delete(0, tk.END)
+
+        self.load_axl_inventory()
+
+    def adjust_axl_quantity(self):
+        selected = self.axl_tree.selection()
+        if not selected:
+            messagebox.showwarning("Selection Required", "Please select an item from the inventory table first.")
+            return
+
+        rowid = selected[0]
+        adj_str = self.entry_axl_adjust.get().strip()
+        if not adj_str:
+            messagebox.showwarning("Input Required", "Please enter an adjustment amount (e.g. +10, -5, or exact 25).")
+            return
+
+        conn = sqlite3.connect("health_ops.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT quantity FROM axl_inventory WHERE rowid = ?", (rowid,))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            messagebox.showerror("Error", "Selected item was not found in database.")
+            return
+
+        current_qty = row[0]
+        try:
+            if adj_str.startswith("+"):
+                delta = float(adj_str[1:].strip())
+                new_qty = current_qty + delta
+            elif adj_str.startswith("-"):
+                delta = float(adj_str[1:].strip())
+                new_qty = current_qty - delta
+            else:
+                new_qty = float(adj_str)
+        except ValueError:
+            conn.close()
+            messagebox.showerror("Invalid Input", "Please enter a valid numeric value.")
+            return
+
+        updated_at = datetime.now().strftime("%Y-%m-%d")
+        cursor.execute("UPDATE axl_inventory SET quantity = ?, updated_at = ? WHERE rowid = ?", (new_qty, updated_at, rowid))
+        conn.commit()
+        conn.close()
+
+        self.entry_axl_adjust.delete(0, tk.END)
+        self.load_axl_inventory()
+
+    def delete_axl_item(self):
+        selected = self.axl_tree.selection()
+        if not selected:
+            messagebox.showwarning("Selection Required", "Please select an item from the inventory table first.")
+            return
+
+        rowid = selected[0]
+        item_vals = self.axl_tree.item(rowid)['values']
+        name = item_vals[0] if item_vals else "item"
+
+        if messagebox.askyesno("Confirm Delete", f"Delete inventory item '{name}'? This cannot be undone."):
+            conn = sqlite3.connect("health_ops.db")
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM axl_inventory WHERE rowid = ?", (rowid,))
+            conn.commit()
+            conn.close()
+            self.load_axl_inventory()
 
 if __name__ == "__main__":
     root = tk.Tk()
