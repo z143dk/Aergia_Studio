@@ -21,3 +21,7 @@ node_modules/
 openrouterapi.txt
 config/credentials/
 
+*.bak
+*.bak-*
+health_ops.db.bak-*
+
